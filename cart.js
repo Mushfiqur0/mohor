@@ -27,7 +27,7 @@ function getCanonicalPrice(item) {
     const catalog = (Array.isArray(window.firestoreProducts) && window.firestoreProducts.length > 0)
         ? window.firestoreProducts
         : (window.productsData || []);
-    if (!Array.isArray(catalog) || catalog.length === 0) return item.price;
+    if (!Array.isArray(catalog) || catalog.length === 0) return Number(item.price) || 0;
 
     let match = null;
     if (item.id !== undefined && item.id !== null) {
@@ -44,9 +44,9 @@ function getCanonicalPrice(item) {
     }
     if (!match) {
         console.warn('Could not verify price for "' + item.name + '" against catalog; using cached price.');
-        return item.price;
+        return Number(item.price) || 0;
     }
-    return match.price;
+    return Number(match.price) || 0;
 }
 
 // Load cart from storage so it survives page reloads / mobile navigation.
@@ -168,9 +168,9 @@ window.updateCartUI = function() {
         }
     } else {
         window.cart.forEach((item, index) => {
-            const itemTotal = item.price * item.qty;
+            const itemTotal = Number(item.price || 0) * Number(item.qty || 1);
             subtotal += itemTotal;
-            totalItems += item.qty;
+            totalItems += Number(item.qty || 1);
             if (!cartItemsContainer) return;
 
             const metaParts = [];
@@ -200,7 +200,7 @@ window.updateCartUI = function() {
         });
     }
 
-    const deliveryFee = currentDeliveryFee();
+    const deliveryFee = Number(currentDeliveryFee()) || 0;
     const finalTotal = subtotal + deliveryFee;
 
     const subEl = document.getElementById('cartSubtotalValue') || document.getElementById('cartSubtotal');
@@ -248,6 +248,14 @@ function validateCheckoutInputs() {
         notify(window.currentLang === 'en' ? 'Please enter your mobile number.' : 'অনুগ্রহ করে আপনার মোবাইল নম্বর দিন।', 'error');
         fieldFlash(phoneEl); return null;
     }
+
+    // Basic Bangladesh mobile number validation (01XXXXXXXXX)
+    const bdPhoneRegex = /^01[0-9]{9}$/;
+    if (!bdPhoneRegex.test(phoneInput)) {
+        notify(window.currentLang === 'en' ? 'Please enter a valid BD mobile number (01XXXXXXXXX).' : 'সঠিক মোবাইল নম্বর দিন (01XXXXXXXXX)।', 'error');
+        fieldFlash(phoneEl); return null;
+    }
+
     if (!addressInput) {
         notify(window.currentLang === 'en' ? 'Please enter your delivery address.' : 'অনুগ্রহ করে আপনার ডেলিভারি ঠিকানা দিন।', 'error');
         fieldFlash(addressEl); return null;
@@ -262,11 +270,23 @@ function validateCheckoutInputs() {
     }
 
     const zoneText = zoneSelect.options[zoneSelect.selectedIndex].text;
-    const deliveryFee = currentDeliveryFee();
-    let subtotal = 0;
-    window.cart.forEach(item => subtotal += (item.price * item.qty));
+    const deliveryFee = Number(currentDeliveryFee()) || 0;
 
-    return { name: nameInput, phone: phoneInput, address: addressInput, zoneText, deliveryFee, subtotal, finalTotal: subtotal + deliveryFee };
+    // Recompute subtotal from canonical product prices to avoid trusting mutable client-side values
+    let canonicalSubtotal = 0;
+    try {
+        window.cart.forEach(item => {
+            const price = (typeof getCanonicalPrice === 'function') ? getCanonicalPrice(item) : (Number(item.price) || 0);
+            canonicalSubtotal += (Number(price) || 0) * (Number(item.qty) || 1);
+        });
+    } catch (e) {
+        console.warn('Error computing canonical subtotal', e);
+        // fallback to client-side prices
+        window.cart.forEach(item => canonicalSubtotal += (Number(item.price) || 0) * (Number(item.qty) || 1));
+    }
+
+    const finalTotal = canonicalSubtotal + deliveryFee;
+    return { name: nameInput, phone: phoneInput, address: addressInput, zoneText, deliveryFee, subtotal: canonicalSubtotal, finalTotal };
 }
 
 function resetCheckoutFormsIfGuest(isGuest) {
@@ -294,7 +314,7 @@ window.checkoutToWhatsApp = function() {
     const WHATSAPP_NUMBER = '8801330113027';
     let message = 'Hello Mohor Clothings! I would like to order the following items:%0A%0A';
     window.cart.forEach((item, index) => {
-        const itemTotal = item.price * item.qty;
+        const itemTotal = Number(item.price) * Number(item.qty);
         message += `${index + 1}. ${item.name} (Size: ${item.size}) | Qty: ${item.qty} - ৳${itemTotal}%0A`;
     });
     message += `%0A*Subtotal: ৳${orderData.subtotal}*`;
@@ -319,34 +339,42 @@ window.checkoutToAdmin = async function() {
     if (confirmBtn) { confirmBtn.classList.add('is-loading'); confirmBtn.disabled = true; }
 
     try {
-        let activeUid = 'guest';
+        let activeUid = null;
+        let activeEmail = null;
+
         if (typeof firebase !== 'undefined' && firebase.auth().currentUser) {
             activeUid = firebase.auth().currentUser.uid;
+            activeEmail = firebase.auth().currentUser.email;
         } else if (window.currentUser) {
             activeUid = window.currentUser.uid;
+            activeEmail = window.currentUser.email || null;
         }
 
-        // SECURITY: never trust prices coming from the client cart/localStorage —
-        // recompute each line item from the canonical catalog. Client-side
-        // mitigation only; the real guard belongs in Firestore rules / a Cloud Function.
+        // SECURITY: recompute each line item from canonical catalog and force Number types
         const verifiedItems = window.cart.map(item => ({
-            name: item.name, size: item.size, qty: item.qty, price: getCanonicalPrice(item)
+            name: String(item.name || item.baseTitle || 'Item'),
+            size: String(item.size || 'Standard'),
+            qty: Number(item.qty) || 1,
+            price: Number(getCanonicalPrice(item)) || 0
         }));
-        const verifiedSubtotal = verifiedItems.reduce((sum, item) => sum + (item.price * item.qty), 0);
-        const verifiedTotal = verifiedSubtotal + orderData.deliveryFee;
+
+        const verifiedSubtotal = Number(verifiedItems.reduce((sum, item) => sum + (item.price * item.qty), 0)) || 0;
+        const verifiedTotal = Number(verifiedSubtotal + (orderData.deliveryFee || 0)) || 0;
 
         const newOrder = {
             userId: activeUid,
-            customerName: orderData.name,
-            customerPhone: orderData.phone,
-            deliveryAddress: orderData.address,
-            deliveryZone: orderData.zoneText,
-            deliveryFee: orderData.deliveryFee,
+            userEmail: activeEmail,
+            customerName: String(orderData.name),
+            customerPhone: String(orderData.phone),
+            deliveryAddress: String(orderData.address),
+            deliveryZone: String(orderData.zoneText),
+            deliveryFee: Number(orderData.deliveryFee) || 0,
             subtotal: verifiedSubtotal,
             totalAmount: verifiedTotal,
             items: verifiedItems,
-            orderDate: new Date().toISOString(),
-            status: 'New'
+            // Use serverTimestamp so ordering and timezone are canonical
+            orderDate: firebase && firebase.firestore ? firebase.firestore.FieldValue.serverTimestamp() : new Date().toISOString(),
+            status: 'pending'
         };
 
         await window.db.collection('orders').add(newOrder);
@@ -356,9 +384,9 @@ window.checkoutToAdmin = async function() {
         window.cart = [];
         window.updateCartUI();
         window.closeCartSidebar();
-        resetCheckoutFormsIfGuest(activeUid === 'guest');
+        resetCheckoutFormsIfGuest(!activeUid);
 
-        if (activeUid !== 'guest' && typeof window.loadUserOrders === 'function') window.loadUserOrders(activeUid);
+        if (activeUid && typeof window.loadUserOrders === 'function') window.loadUserOrders(activeUid);
     } catch (error) {
         console.error('Error saving order: ', error);
         notify(window.currentLang === 'en' ? 'There was an error placing your order. Please try WhatsApp instead.' : 'অর্ডার প্লেস করতে সমস্যা হয়েছে। অনুগ্রহ করে হোয়াটসঅ্যাপে চেষ্টা করুন।', 'error');
