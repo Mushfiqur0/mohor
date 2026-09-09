@@ -225,6 +225,47 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================================================
+// Meta Conversions API (CAPI) & Pixel Unified Event Tracking
+// ==========================================================================
+window.trackMetaEvent = async function(eventName, userData = {}, customData = {}) {
+    const eventId = "evt_" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
+
+    // 1. Browser Track (Meta Pixel)
+    if (typeof window.fbq === "function") {
+        window.fbq("track", eventName, customData, { eventID: eventId });
+    }
+
+    // 2. Server Track (Cloudflare CAPI Worker)
+    try {
+        await fetch("https://meta-capi.2022731073.workers.dev", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                data: [
+                    {
+                        event_name: eventName,
+                        event_time: Math.floor(Date.now() / 1000),
+                        event_id: eventId, // Deduplication Key
+                        action_source: "website",
+                        event_source_url: window.location.href,
+                        user_data: userData,
+                        custom_data: customData
+                    }
+                ]
+            })
+        });
+    } catch (err) {
+        console.error("Meta CAPI dispatch error:", err);
+    }
+};
+window.sendMetaCapiEvent = window.trackMetaEvent;
+
+// Trigger PageView automatically on DOM load
+document.addEventListener('DOMContentLoaded', () => {
+    window.trackMetaEvent("PageView");
+});
+
+// ==========================================================================
 // Toast notifications (replaces blocking alert() calls site-wide)
 // ==========================================================================
 function ensureToastStack() {
@@ -608,6 +649,17 @@ function openProductModal(product) {
     selectedSize = null;
     selectedColor = null;
 
+    // Track ViewContent event in Meta Pixel + CAPI
+    if (typeof window.trackMetaEvent === "function") {
+        window.trackMetaEvent("ViewContent", {}, {
+            content_name: getText(product.title),
+            content_ids: [String(product.id)],
+            content_type: 'product',
+            value: product.price,
+            currency: 'BDT'
+        });
+    }
+
     const sizeWarn = document.getElementById('sizeWarning');
     const colorWarn = document.getElementById('colorWarning');
     if (sizeWarn) sizeWarn.classList.remove('show');
@@ -760,6 +812,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof window.addToCart === "function") {
                 window.addToCart(currentViewingProduct, selectedSize || 'Standard', selectedColor);
             }
+
+            // Track AddToCart event in Meta Pixel + CAPI
+            if (typeof window.trackMetaEvent === "function" && currentViewingProduct) {
+                window.trackMetaEvent("AddToCart", {}, {
+                    content_name: getText(currentViewingProduct.title),
+                    content_ids: [String(currentViewingProduct.id)],
+                    content_type: 'product',
+                    value: currentViewingProduct.price,
+                    currency: 'BDT'
+                });
+            }
+
             closeProductModal();
         });
     }
@@ -783,6 +847,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof window.addToCart === "function") {
                 window.addToCart(currentViewingProduct, selectedSize || 'Standard', selectedColor);
             }
+
+            // Track AddToCart and InitiateCheckout events in Meta Pixel + CAPI
+            if (typeof window.trackMetaEvent === "function" && currentViewingProduct) {
+                window.trackMetaEvent("AddToCart", {}, {
+                    content_name: getText(currentViewingProduct.title),
+                    content_ids: [String(currentViewingProduct.id)],
+                    content_type: 'product',
+                    value: currentViewingProduct.price,
+                    currency: 'BDT'
+                });
+                window.trackMetaEvent("InitiateCheckout", {}, {
+                    content_name: getText(currentViewingProduct.title),
+                    content_ids: [String(currentViewingProduct.id)],
+                    content_type: 'product',
+                    value: currentViewingProduct.price,
+                    currency: 'BDT'
+                });
+            }
+
             closeProductModal();
             window.location.href = 'cart.html';
         });
