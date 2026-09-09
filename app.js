@@ -235,9 +235,9 @@ window.trackMetaEvent = async function(eventName, userData = {}, customData = {}
         window.fbq("track", eventName, customData, { eventID: eventId });
     }
 
-    // 2. Server Track (Cloudflare CAPI Worker)
+    // 2. Server Track (Cloudflare CAPI Worker routed via custom domain)
     try {
-        await fetch("https://meta-capi.2022731073.workers.dev", {
+        await fetch("https://capi.mohor.me", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -961,6 +961,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.body.classList.add('is-ready');
+});
+
+// Intercept cart.js addToCart calls globally across all standalone pages
+window.addEventListener('load', () => {
+    if (typeof window.addToCart === 'function' && !window._capiHooked) {
+        window._capiHooked = true;
+        const originalAddToCart = window.addToCart;
+        window.addToCart = function(product, size, color) {
+            originalAddToCart(product, size, color);
+            if (product && typeof window.trackMetaEvent === 'function') {
+                window.trackMetaEvent("AddToCart", {}, {
+                    content_name: window.getText ? window.getText(product.title) : (product.title || 'Product'),
+                    content_ids: [String(product.id)],
+                    content_type: 'product',
+                    value: product.price || 0,
+                    currency: 'BDT'
+                });
+            }
+        };
+    }
 });
 
 // Fallback: ensure the page fades in even if DOMContentLoaded already fired.
