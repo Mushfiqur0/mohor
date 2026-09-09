@@ -248,7 +248,6 @@ window.trackMetaEvent = async function(eventName, userData = {}, customData = {}
                         event_id: eventId, // Deduplication Key
                         action_source: "website",
                         event_source_url: window.location.href,
-                        test_event_code: "TEST82777",
                         user_data: userData,
                         custom_data: customData
                     }
