@@ -48,7 +48,7 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
                 <span class="hide-mobile" data-i18n="backBtn">Back</span>
             </a>
             <a href="index.html" class="brand-logo" aria-label="Mohor Clothings — Home">
-                <img src="assets/logo-ink.png" alt="Mohor Clothings - Mohor Dress Brand Logo" width="120" height="36">
+                <img src="assets/logo-ink.png" alt="Mohor Clothings - Mohor Dress Brand Logo" width="120" height="36" loading="lazy" decoding="async">
             </a>
             <div class="nav-actions">
                 <button type="button" id="langToggleBtn" class="lang-btn" aria-label="Switch language">EN<span class="lang-sep">/</span>বাং</button>
@@ -63,7 +63,7 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
     <div class="product-detail">
         <div class="pd-gallery">
             <div class="pd-gallery-main" id="mainImageWrap">
-                <img id="mainImage" src="" alt="Mohor Clothings Dress">
+                <img id="mainImage" src="" alt="Mohor Clothings Dress" loading="lazy" decoding="async">
             </div>
             <div class="pd-thumbs" id="thumbnailContainer"></div>
         </div>
@@ -71,6 +71,8 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
         <div class="pd-info">
             <span class="card-cat" id="prodCategory"></span>
             <h1 id="prodTitle">Loading…</h1>
+            
+            <!-- Enhanced Price Container with Discount Badge Support -->
             <div class="pd-price" id="prodPrice"></div>
 
             <div class="opt-group" id="colorSection" style="display:none;">
@@ -101,6 +103,16 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
         </div>
     </div>
 
+    <!-- Related Products Recommendation Engine Section -->
+    <section class="related-products-section container">
+        <div class="section-head" style="text-align: left; margin-bottom: 20px;">
+            <span class="eyebrow" data-i18n="relatedEyebrow">Recommended</span>
+            <h2 style="font-size: 1.5rem; margin-top: 6px;" data-i18n="relatedTitle">You May Also Like</h2>
+            <svg class="stitch-rule" viewBox="0 0 72 9" style="margin: 8px 0 0 0;"><line x1="0" y1="4.5" x2="72" y2="4.5"/></svg>
+        </div>
+        <div class="related-products-grid product-grid" id="relatedProductsGrid"></div>
+    </section>
+
     <div class="pd-bottom-bar">
         <button type="button" class="btn btn-outline" style="flex:1;" id="addToCartBtnMobile" data-i18n="addToCart">Add to Cart</button>
         <button type="button" class="btn btn-dark" style="flex:1;" id="buyNowBtn" data-i18n="buyNow">Buy Now</button>
@@ -110,7 +122,7 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
     <div class="lightbox" id="imageModal">
         <button type="button" class="lightbox-close" id="closeModal" aria-label="Close">&times;</button>
         <button type="button" class="lightbox-nav lightbox-prev" id="prevModal" aria-label="Previous image">&#10094;</button>
-        <img id="modalImg" alt="Mohor Clothings Dress Full Image">
+        <img id="modalImg" alt="Mohor Clothings Dress Full Image" loading="lazy" decoding="async">
         <button type="button" class="lightbox-nav lightbox-next" id="nextModal" aria-label="Next image">&#10095;</button>
         <div class="lightbox-actions" id="lightboxActions">
             <button type="button" id="lightboxAddToCart" class="btn btn-brass" data-i18n="addToCart">Add to Cart</button>
@@ -249,7 +261,7 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
                     "@type": "Offer",
                     "url": window.location.href,
                     "priceCurrency": "BDT",
-                    "price": activeProduct.price,
+                    "price": activeProduct.salePrice || activeProduct.price,
                     "availability": "https://schema.org/InStock",
                     "itemCondition": "https://schema.org/NewCondition"
                 }
@@ -259,7 +271,17 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
             scriptTag.textContent = JSON.stringify(schemaData);
             document.head.appendChild(scriptTag);
 
-            document.getElementById('prodPrice').innerText = '৳ ' + activeProduct.price;
+            // Render Price with Regular & Sale Price support
+            const priceEl = document.getElementById('prodPrice');
+            const regPrice = activeProduct.regularPrice || activeProduct.price;
+            const salePrice = activeProduct.salePrice;
+            if (salePrice && Number(salePrice) < Number(regPrice)) {
+                const discountPct = Math.round(((regPrice - salePrice) / regPrice) * 100);
+                priceEl.innerHTML = `<span class="price-original">৳ ${regPrice}</span> <span class="price-sale">৳ ${salePrice}</span> <span class="sale-badge">-${discountPct}% OFF</span>`;
+            } else {
+                priceEl.innerText = '৳ ' + regPrice;
+            }
+
             renderDynamicText();
 
             const thumbContainer = document.getElementById('thumbnailContainer');
@@ -269,7 +291,7 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
                 const thumb = document.createElement('div');
                 thumb.className = 'thumbnail' + (index === 0 ? ' active' : '');
                 const thumbAltText = `${prodTitleStr} - Mohor Dress Image ${index + 1}`;
-                thumb.innerHTML = `<img src="${imgSrc}" alt="${thumbAltText}" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">`;
+                thumb.innerHTML = `<img src="${imgSrc}" alt="${thumbAltText}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">`;
                 thumb.onclick = () => {
                     currentImageIndex = index;
                     setMainImage(imgSrc, thumbAltText);
@@ -279,6 +301,13 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
                 thumbContainer.appendChild(thumb);
             });
             document.getElementById('mainImage').onerror = function() { this.onerror = null; this.src = 'assets/image-placeholder.svg'; };
+
+            // Render Recommendations
+            if (typeof window.renderRelatedProducts === 'function') {
+                window.renderRelatedProducts(activeProduct, 'relatedProductsGrid');
+            } else if (typeof renderRelatedProducts === 'function') {
+                renderRelatedProducts(activeProduct, 'relatedProductsGrid');
+            }
 
             // Sizes (toggle to unselect)
             const sizeContainer = document.getElementById('sizeOptions');
