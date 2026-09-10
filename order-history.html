@@ -3,17 +3,43 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Order History | Mohor Clothings</title>
-
-  <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
-  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=21">
+  <title>Order Details | Mohor</title>
+  <link rel="icon" type="image/jpeg" href="favicon.jpeg">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { opacity: 1 !important; background-color: #0c0c0c; color: #fff; }
+    .order-card-detail {
+      background: #141414;
+      border: 1px solid #282828;
+      border-radius: 8px;
+      padding: 24px;
+      margin-top: 20px;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #222;
+      font-size: 14px;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .status-pill {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .status-new, .status-pending { background: rgba(201,161,74,0.2); color: #C9A14A; border: 1px solid #C9A14A; }
+    .status-confirmed { background: rgba(62,107,138,0.2); color: #6ba4d9; border: 1px solid #6ba4d9; }
+    .status-shipped { background: rgba(110,76,126,0.2); color: #b886e3; border: 1px solid #b886e3; }
+    .status-completed { background: rgba(60,122,86,0.2); color: #52c480; border: 1px solid #52c480; }
+    .status-cancelled { background: rgba(166,64,44,0.2); color: #e06650; border: 1px solid #e06650; }
+  </style>
 <!-- Meta Pixel Code -->
 <script>
 !function(f,b,e,v,n,t,s)
@@ -33,132 +59,48 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
 <!-- End Meta Pixel Code -->
 </head>
 <body>
-
-  <header class="site-header" id="siteHeader">
+  <header class="site-header">
     <nav class="nav container">
-      <a href="index.html" class="brand-logo" aria-label="Mohor Clothings — Home">
-        <img src="assets/logo-ink.png" alt="Mohor Clothings" class="logo-dark" width="150" height="45">
-        <img src="assets/logo-white.png" alt="Mohor Clothings" class="logo-light" width="150" height="45">
-      </a>
-      <div class="nav-links" id="navLinks">
-        <a href="index.html" data-i18n="navShop">Shop</a>
-        <a href="order-history.html" class="active" data-i18n="navOrders">Order History</a>
-        <a href="about.html" data-i18n="navAbout">About Us</a>
-        <a href="policy.html" data-i18n="navPolicy">Policy</a>
-      </div>
+      <a href="index.html" class="brand-logo"><img src="assets/logo-ink.png" alt="Mohor" width="150"></a>
       <div class="nav-actions">
-        <button type="button" id="langToggleBtn" class="lang-btn" aria-label="Switch language">EN<span class="lang-sep">/</span>বাং</button>
-        <button type="button" id="themeToggleBtn" class="icon-btn" aria-label="Toggle theme">🌗</button>
-        <button type="button" id="openAccountBtn" class="icon-btn" aria-label="Account">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
-          <span class="icon-btn-label" data-i18n="navAccount">Account</span>
-        </button>
-        <button type="button" id="openCartBtn" class="icon-btn" aria-label="Cart">
-          <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-          <span class="cart-badge" id="cartBadge" data-count="0">0</span>
-        </button>
-        <button type="button" class="menu-toggle" id="menuToggle" aria-label="Menu" aria-expanded="false" aria-controls="navLinks">
-          <span></span><span></span><span></span>
-        </button>
+        <a href="order-history.html" class="btn btn-ghost" data-i18n="backBtn">&#8592; Back to History</a>
+        <button type="button" id="openAccountBtn" class="icon-btn" data-i18n="navAccount">Account</button>
       </div>
     </nav>
   </header>
 
-  <!-- Page Banner Styled Exactly Like Delivery & Return Policy -->
-  <section class="page-header">
-    <span class="eyebrow" data-i18n="aboutEyebrow">Your Account</span>
-    <h1 data-i18n="accOrderHistory">My Order History</h1>
-    <p>A consolidated view of your past orders. Sign in if you are not already.</p>
-    <svg class="stitch-rule" viewBox="0 0 72 9" aria-hidden="true"><line x1="0" y1="4" x2="72" y2="4"/></svg>
-  </section>
-
-  <main class="container" style="padding:48px 5% 80px; max-width:900px;">
-    <div id="userOrderHistoryContainer">
-      <p class="order-history-loading" data-i18n="accLoadingOrders">Loading orders…</p>
+  <main class="container" style="padding:36px 5% 80px; max-width:850px;">
+    <h1>Order Details</h1>
+    <div id="orderDetailContainer">
+      <p class="order-history-loading">Loading order details…</p>
     </div>
   </main>
 
-  <!-- Cart Sidebar -->
-  <div class="cart-overlay" id="cartOverlay"></div>
-  <div class="cart-sidebar" id="cartSidebar">
-    <div class="side-header">
-      <h3 data-i18n="cartTitle">Your Cart</h3>
-      <button type="button" class="side-close" id="closeCartBtn" aria-label="Close cart">&times;</button>
-    </div>
-    <div class="cart-items" id="cartItemsContainer"></div>
-    <div class="side-footer">
-      <div class="cart-total-row">
-        <span data-i18n="cartTotal">Total</span>
-        <span class="amount">৳<span id="cartTotalValue">0</span></span>
+  <!-- Account Sidebar Modal for Header Link -->
+  <div class="cart-overlay" id="accountOverlay"></div>
+  <div class="cart-sidebar" id="accountSidebar" style="padding: 20px; overflow-y: auto;">
+      <div class="cart-header" style="padding: 0 0 20px 0; background: transparent; border-bottom: 1px solid var(--border-color);">
+          <h3 id="accountModalTitle" data-i18n="accTitle">Customer Account</h3>
+          <button type="button" class="close-cart" id="closeAccountBtn" style="border: none; background: none; font-size: 28px; cursor: pointer; color:#fff;">&times;</button>
       </div>
-      <button type="button" id="adminOrderBtn" class="btn btn-dark btn-block" onclick="window.checkoutToAdmin()" style="margin-bottom:8px;">
-        <span class="spinner"></span><span class="btn-label" data-i18n="btnConfirmOrder">Confirm Order</span>
-      </button>
-    </div>
+      <div id="authView" style="margin-top: 20px;">
+          <div id="loginFormContainer">
+              <h4 style="margin-bottom: 15px; font-size: 16px;" data-i18n="accLoginTitle">Login to Your Account</h4>
+              <input type="email" id="loginEmail" placeholder="Email Address" data-i18n-placeholder="accEmailPlaceholder" style="width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #333; background:#181818; color:#fff; border-radius: 4px;">
+              <input type="password" id="loginPassword" placeholder="Password" data-i18n-placeholder="accPassPlaceholder" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #333; background:#181818; color:#fff; border-radius: 4px;">
+              <button type="button" onclick="window.handleLogin()" style="width: 100%; background: var(--primary-gold); color: white; padding: 14px; border: none; font-weight: 600; cursor: pointer; border-radius: 4px;" data-i18n="accLoginBtn">LOG IN</button>
+          </div>
+      </div>
+      <div id="profileView" style="display: none; margin-top: 10px;">
+          <p style="font-size: 12px; color: #888;" data-i18n="accLoggedInAs">Logged in as:</p>
+          <strong id="userProfileEmail" style="font-size: 14px; display: block; margin-bottom: 15px; color: #fff;"></strong>
+          <button type="button" onclick="window.handleLogout()" style="background: transparent; color: #d9534f; border: 1px solid #d9534f; padding: 8px 15px; font-size: 11px; cursor: pointer; border-radius: 4px;">LOG OUT</button>
+      </div>
   </div>
 
-  <!-- Account Sidebar Modal -->
-  <div class="account-overlay" id="accountOverlay"></div>
-  <div class="account-sidebar" id="accountSidebar">
-    <div class="side-header">
-      <h3 id="accountModalTitle" data-i18n="accTitle">Customer Account</h3>
-      <button type="button" class="side-close" id="closeAccountBtn" aria-label="Close account panel">&times;</button>
-    </div>
-    <div class="account-body">
-      <div id="authView">
-        <div id="loginFormContainer">
-          <h4 style="font-size:1.05rem; margin-bottom:16px; text-align:center;" data-i18n="accLoginTitle">Login to Your Account</h4>
-          <div class="field"><input type="email" id="loginEmail" class="input" data-i18n-placeholder="accEmailPlaceholder" placeholder="Email Address"></div>
-          <div class="field"><input type="password" id="loginPassword" class="input" data-i18n-placeholder="accPassPlaceholder" placeholder="Password"></div>
-          <button type="button" class="btn btn-dark btn-block" onclick="window.handleLogin(event)"><span class="spinner"></span><span class="btn-label" data-i18n="accLoginBtn">Log In</span></button>
-          <p class="auth-tabs-msg"><span data-i18n="accNoAccount">Don't have an account?</span> <a href="#" class="auth-switch-link" onclick="window.toggleAuthMode();return false;" data-i18n="accSignUpLink">Sign up</a></p>
-        </div>
-        <div id="signupFormContainer" style="display:none;">
-          <h4 style="font-size:1.05rem; margin-bottom:16px; text-align:center;" data-i18n="accSignupTitle">Create an Account</h4>
-          <div class="field"><input type="text" id="signupName" class="input" data-i18n-placeholder="accNamePlaceholder" placeholder="Full Name"></div>
-          <div class="field"><input type="email" id="signupEmail" class="input" data-i18n-placeholder="accEmailPlaceholder" placeholder="Email Address"></div>
-          <div class="field"><input type="password" id="signupPassword" class="input" data-i18n-placeholder="accPassMinPlaceholder" placeholder="Password (min 6 characters)"></div>
-          <button type="button" class="btn btn-dark btn-block" onclick="window.handleSignup(event)"><span class="spinner"></span><span class="btn-label" data-i18n="accSignupBtn">Sign Up</span></button>
-          <p class="auth-tabs-msg"><span data-i18n="accHasAccount">Already have an account?</span> <a href="#" class="auth-switch-link" onclick="window.toggleAuthMode();return false;" data-i18n="accLoginLink">Log in</a></p>
-        </div>
-      </div>
-
-      <div id="profileView" style="display:none;">
-        <div class="profile-avatar" id="profileAvatarInitial">M</div>
-        <p class="profile-email"><span data-i18n="accLoggedInAs">Logged in as</span><br><strong id="userProfileEmail"></strong></p>
-        <button type="button" class="btn btn-ghost btn-block" style="margin-top:12px;" onclick="window.handleLogout(event)"><span class="spinner"></span><span class="btn-label" data-i18n="accLogoutBtn">Log Out</span></button>
-      </div>
-    </div>
-  </div>
-
-  <footer class="site-footer">
-    <div class="container">
-      <div class="footer-grid">
-        <div class="footer-brand">
-          <img src="assets/logo-white.png" alt="Mohor Clothings" width="130" height="39">
-          <p data-i18n="footerTagline">Handcrafted luxury fashion, stitched with tradition — from Sylhet to all of Bangladesh.</p>
-        </div>
-        <div class="footer-col">
-          <h5 data-i18n="footerShopHeading">Shop</h5>
-          <a href="index.html" data-i18n="navShop">Shop</a>
-          <a href="about.html" data-i18n="navAbout">About Us</a>
-          <a href="policy.html" data-i18n="navPolicy">Policy</a>
-        </div>
-        <div class="footer-col">
-          <h5 data-i18n="footerHelpHeading">Help</h5>
-          <a href="policy.html">Delivery &amp; Returns</a>
-          <a href="cart.html" data-i18n="navCart">Cart</a>
-        </div>
-        <div class="footer-col">
-          <h5 data-i18n="footerContactHeading">Contact</h5>
-          <a href="https://wa.me/8801330113027" target="_blank" rel="noopener">WhatsApp: +880 1330-113027</a>
-          <p data-i18n="footerDelivery">Nationwide delivery across Bangladesh</p>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <span data-i18n="footerText">&copy; 2026 Mohor Clothings Bangladesh. All Rights Reserved.</span>
-        <span class="made-with" data-i18n="footerMadeWith">Handcrafted in Sylhet</span>
-      </div>
+  <footer class="site-footer" style="margin-top: 60px;">
+    <div class="container" style="text-align: center; padding: 20px 0;">
+      <p style="font-size: 12px; color: rgba(250,243,236,0.6);" data-i18n="footerText">&copy; 2026 Mohor Clothings Bangladesh. All Rights Reserved.</p>
     </div>
   </footer>
 
@@ -166,37 +108,129 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  
   <script>
     const firebaseConfig = { apiKey: "AIzaSyALxypXDkF9QexbD_wE7-ADALIdj5vd-rY", authDomain: "mohor-app.firebaseapp.com", projectId: "mohor-app" };
     if (typeof firebase !== 'undefined' && !firebase.apps.length) firebase.initializeApp(firebaseConfig);
     window.db = firebase.firestore();
   </script>
-
-  <!-- Required JS Files -->
+  
   <script src="app.js?v=21"></script>
   <script src="cart.js?v=21"></script>
   <script type="module" src="auth.js?v=21"></script>
 
   <script>
+    // Clean .html from URL bar
     if (window.location.pathname.endsWith('.html')) {
       const cleanPath = window.location.pathname.replace(/\.html$/, '') + window.location.search;
       window.history.replaceState(null, '', cleanPath);
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const container = document.getElementById('userOrderHistoryContainer');
-      if (typeof firebase !== 'undefined' && firebase.auth) {
-        firebase.auth().onAuthStateChanged((user) => {
-          if (user) {
-            if (typeof window.loadUserOrders === 'function') {
-              window.loadUserOrders(user.uid);
-            }
-          } else {
-            container.innerHTML = '<p class="order-history-empty">Please sign in to view your order history. Open Account (top-right) to log in.</p>';
-          }
-        });
+    function esc(s){ return String(s||'').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+      const out = document.getElementById('orderDetailContainer');
+      if (!id) { out.innerHTML = '<p style="color:#aaa; margin-top:20px;">No order selected.</p>'; return; }
+
+      try {
+        const doc = await db.collection('orders').doc(id).get();
+        if (!doc.exists) { out.innerHTML = '<p style="color:#aaa; margin-top:20px;">Order not found.</p>'; return; }
+        
+        const o = doc.data();
+        const date = o.orderDate ? (o.orderDate.toDate ? o.orderDate.toDate().toLocaleString() : new Date(o.orderDate).toLocaleString()) : '—';
+        const status = o.status || 'Pending';
+        const statusClass = 'status-' + status.toLowerCase().replace(/\s+/g, '');
+
+        const custName = o.customerName || o.custName || o.name || 'N/A';
+        const custPhone = o.customerPhone || o.custPhone || o.phone || 'N/A';
+        const address = o.deliveryAddress || o.address || 'N/A';
+        const deliveryCharge = o.deliveryFee !== undefined ? o.deliveryFee : (o.deliveryCharge !== undefined ? o.deliveryCharge : (o.deliveryZone === 'inside' ? 80 : (o.deliveryZone === 'outside' ? 130 : 0)));
+        const subtotal = o.subtotal || (o.totalAmount ? o.totalAmount - deliveryCharge : 0);
+        const total = o.totalAmount || 0;
+        const items = o.items || [];
+
+        // Compute or retrieve dynamic order savings
+        let totalSavings = Number(o.totalSavings) || 0;
+        if (!totalSavings && Array.isArray(items)) {
+          totalSavings = items.reduce((sum, it) => {
+            const reg = Number(it.regularPrice) || Number(it.price) || 0;
+            const eff = Number(it.price) || Number(it.salePrice) || reg;
+            const savingsUnit = Math.max(0, reg - eff);
+            return sum + (savingsUnit * (Number(it.qty || it.quantity) || 1));
+          }, 0);
+        }
+
+        out.innerHTML = `
+          <div class="order-card-detail">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #282828; padding-bottom:16px; margin-bottom:16px;">
+              <div>
+                <span style="font-size:12px; color:#888; text-transform:uppercase;">Order ID</span>
+                <div style="font-family:var(--font-mono); font-size:16px; font-weight:700; color:#C9A14A;">${esc(id)}</div>
+              </div>
+              <div>
+                <span class="status-pill ${statusClass}">${esc(status)}</span>
+              </div>
+            </div>
+
+            <!-- Customer Information Section -->
+            <div style="background:#1a1a1a; padding:16px; border-radius:6px; margin-bottom:20px; border:1px solid #2a2a2a;">
+              <h4 style="color:#C9A14A; font-size:13px; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">Delivery Details</h4>
+              <div class="detail-row"><span>Customer Name:</span> <strong>${esc(custName)}</strong></div>
+              <div class="detail-row"><span>Mobile Number:</span> <strong>${esc(custPhone)}</strong></div>
+              <div class="detail-row"><span>Delivery Address:</span> <strong style="text-align:right; max-width:60%;">${esc(address)}</strong></div>
+              <div class="detail-row"><span>Order Date:</span> <span>${esc(date)}</span></div>
+            </div>
+
+            <!-- Items Purchased -->
+            <h4 style="color:#C9A14A; font-size:13px; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Order Items</h4>
+            <div style="margin-bottom:20px;">
+              ${items.map(it => {
+                const qty = Number(it.qty || it.quantity) || 1;
+                const price = Number(it.price || it.salePrice || it.unitPrice) || 0;
+                const regPrice = Number(it.regularPrice) || price;
+                const hasDiscount = regPrice > price;
+                const lineTotal = qty * price;
+                const lineRegTotal = qty * regPrice;
+
+                return `
+                  <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:#181818; border-radius:6px; margin-bottom:8px; border:1px solid #252525;">
+                    <div>
+                      <strong style="font-size:14px; display:block;">${esc(it.name || it.title || 'Item')}</strong>
+                      <span style="color:#888; font-size:12px;">Size / Variant: ${esc(it.size || it.variant || 'Default')}${it.color ? ' &middot; Color: ' + esc(it.color) : ''}</span>
+                    </div>
+                    <div style="text-align:right;">
+                      <span style="font-size:12px; color:#aaa;">
+                        ${hasDiscount ? `<span style="text-decoration:line-through; color:#777; margin-right:4px;">৳${esc(regPrice)}</span>` : ''}
+                        ${esc(qty)} × ৳${esc(price)}
+                      </span>
+                      <strong style="display:block; color:#C9A14A; margin-top:2px;">
+                        ${hasDiscount ? `<span style="text-decoration:line-through; color:#777; font-size:12px; margin-right:6px; font-weight:normal;">৳${esc(lineRegTotal)}</span>` : ''}
+                        ৳${esc(lineTotal)}
+                      </strong>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <!-- Financial Summary -->
+            <div style="background:#181818; padding:16px; border-radius:6px; border:1px solid #252525;">
+              <div class="detail-row"><span>Items Subtotal:</span> <span>৳${esc(subtotal)}</span></div>
+              ${totalSavings > 0 ? `<div class="detail-row" style="color:#52c480;"><span>Total Savings:</span> <span>-৳${esc(totalSavings)}</span></div>` : ''}
+              <div class="detail-row"><span>Delivery Fee:</span> <span>৳${esc(deliveryCharge)}</span></div>
+              <div class="detail-row" style="font-size:18px; font-weight:700; color:#C9A14A; margin-top:6px; padding-top:10px; border-top:1px solid #333;">
+                <span>Grand Total:</span>
+                <span>৳${esc(total)}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      } catch (e) {
+        out.innerHTML = '<p style="color:#e06650; margin-top:20px;">Could not load order details.</p>';
+        console.error(e);
       }
+
       setTimeout(() => { if (typeof updateUIText === 'function') updateUIText(); }, 50);
     });
   </script>
