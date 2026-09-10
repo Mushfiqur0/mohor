@@ -33,6 +33,9 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
 </head>
 <body>
 
+    <!-- Dynamic Top Sticky Banner Anchor -->
+    <div id="topPromoBanner" class="top-promo-banner" style="display:none;"></div>
+
     <header class="checkout-nav">
         <nav class="nav container">
             <a href="index.html" class="back-btn">
@@ -55,6 +58,10 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
             <div style="margin-top:18px;">
                 <div class="totals-row"><span data-i18n="cartSubtotal">Subtotal</span><span id="cartSubtotal">৳0</span></div>
                 <div class="totals-row"><span data-i18n="cartDelivery">Delivery</span><span id="cartDelivery">৳0</span></div>
+                
+                <!-- Savings Indicator Anchor -->
+                <div id="checkoutSavings" class="cart-savings-indicator" style="display:none;"></div>
+
                 <div class="totals-row grand"><span data-i18n="cartTotal">Final Total</span><span class="amount" id="cartTotal">৳0</span></div>
             </div>
         </div>
@@ -74,7 +81,7 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
                 <select id="deliveryZone" class="input" required>
                     <option value="" disabled selected data-i18n="selectDeliveryZone">Select Delivery Zone</option>
                     <option value="inside" data-i18n="zoneInside">Inside Sylhet (৳80)</option>
-                    <option value="outside" data-i18n="zoneOutside">Outside Sylhet (৳150)</option>
+                    <option value="outside" data-i18n="zoneOutside">Outside Sylhet (৳130)</option>
                 </select>
             </div>
             <p id="dynamicPolicyDisplay" style="display:none; font-size:.76rem; color:var(--ink-muted); margin:-6px 0 14px; line-height:1.6;"></p>
