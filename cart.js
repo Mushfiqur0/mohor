@@ -1,6 +1,6 @@
 // ==========================================================================
 // MOHOR CLOTHINGS — cart.js
-// Cart state, cart UI, and the two checkout paths (WhatsApp / website).
+// Cart state, cart UI, dynamic discount savings engine, and the two checkout paths.
 // ==========================================================================
 
 function escapeHtml(value) {
@@ -14,39 +14,54 @@ function notify(message, type) {
     else alert(message);
 }
 
-// SECURITY: look up the real, current price for a cart line from the
-// canonical product catalog (Firestore if loaded, else the static fallback)
-// instead of trusting whatever price was cached in localStorage, which is
-// editable via devtools before checkout. Matches by product id first, then
-// by base title, then falls back to the legacy display-name match so a
-// cart saved by an older version of this site still verifies correctly.
-// NOTE: this is a client-side mitigation only — the authoritative fix is to
-// re-validate totals in Firestore Security Rules or a Cloud Function, since
-// anyone can bypass this file entirely and call the Firestore SDK directly.
-function getCanonicalPrice(item) {
+// SECURITY & DISCOUNT ENGINE: look up canonical item pricing & discount specs
+// from the product catalog (Firestore if loaded, else static fallback).
+// Recomputes regular price vs sale price to prevent client-side tampering via devtools.
+function getCanonicalItemDetails(item) {
     const catalog = (Array.isArray(window.firestoreProducts) && window.firestoreProducts.length > 0)
         ? window.firestoreProducts
         : (window.productsData || []);
-    if (!Array.isArray(catalog) || catalog.length === 0) return Number(item.price) || 0;
 
     let match = null;
-    if (item.id !== undefined && item.id !== null) {
-        match = catalog.find(p => String(p.id) === String(item.id));
+    if (Array.isArray(catalog) && catalog.length > 0) {
+        if (item.id !== undefined && item.id !== null) {
+            match = catalog.find(p => String(p.id) === String(item.id));
+        }
+        if (!match && item.baseTitle) {
+            match = catalog.find(p => {
+                const title = typeof p.title === 'string' ? p.title : (p.title && (p.title.en || p.title.bn)) || '';
+                return title === item.baseTitle;
+            });
+        }
+        if (!match) {
+            match = catalog.find(p => p.title && (p.title.en === item.name || p.title.bn === item.name));
+        }
     }
-    if (!match && item.baseTitle) {
-        match = catalog.find(p => {
-            const title = typeof p.title === 'string' ? p.title : (p.title && (p.title.en || p.title.bn)) || '';
-            return title === item.baseTitle;
-        });
+
+    let regularPrice = Number(item.regularPrice || item.price) || 0;
+    let salePrice = item.salePrice !== undefined && item.salePrice !== null ? Number(item.salePrice) : (Number(item.price) || regularPrice);
+
+    if (match) {
+        const catalogReg = Number(match.regularPrice || match.price) || 0;
+        const catalogSale = match.salePrice !== undefined && match.salePrice !== null ? Number(match.salePrice) : catalogReg;
+        regularPrice = catalogReg;
+        salePrice = catalogSale;
     }
-    if (!match) {
-        match = catalog.find(p => p.title && (p.title.en === item.name || p.title.bn === item.name));
+
+    // Check for active storewide bulk percentage discount if salePrice isn't individually explicitly lower
+    const activeStoreDiscount = window.activeStoreDiscount || 0;
+    if (activeStoreDiscount > 0 && regularPrice > 0 && salePrice >= regularPrice) {
+        salePrice = Math.round(regularPrice * (1 - activeStoreDiscount / 100));
     }
-    if (!match) {
-        console.warn('Could not verify price for "' + item.name + '" against catalog; using cached price.');
-        return Number(item.price) || 0;
-    }
-    return Number(match.price) || 0;
+
+    const effectivePrice = (salePrice > 0 && salePrice < regularPrice) ? salePrice : (salePrice || regularPrice);
+    const savingsPerUnit = Math.max(0, regularPrice - effectivePrice);
+
+    return { regularPrice, salePrice: effectivePrice, effectivePrice, savingsPerUnit };
+}
+
+function getCanonicalPrice(item) {
+    return getCanonicalItemDetails(item).effectivePrice;
 }
 
 // Load cart from storage so it survives page reloads / mobile navigation.
@@ -83,14 +98,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cartOverlay) cartOverlay.addEventListener('click', window.closeCartSidebar);
 });
 
-// Attached to window so the quick-view modal (app.js) and product.html can
-// call it. Takes the full product object (not just a name string) so the
-// cart line can carry a stable id/baseTitle for reliable price verification
-// at checkout, independent of how the display name gets formatted.
+// Attached to window so quick-view modal (app.js) and product.html can call it.
 window.addToCart = function(product, size, color) {
-    const baseTitle = getText(product.title) || (typeof product.title === 'string' ? product.title : 'Item');
+    const getTextFn = (typeof window.getText === 'function') ? window.getText : (f => typeof f === 'string' ? f : (f?.en || 'Item'));
+    const baseTitle = getTextFn(product.title) || 'Item';
     const id = product.id !== undefined ? String(product.id) : null;
-    const price = Number(product.price) || 0;
+    const regularPrice = Number(product.regularPrice || product.price) || 0;
+    const salePrice = (product.salePrice !== undefined && product.salePrice !== null) ? Number(product.salePrice) : regularPrice;
+    const effectivePrice = (salePrice > 0 && salePrice < regularPrice) ? salePrice : regularPrice;
 
     const displayColor = (color && color !== 'Default') ? color : null;
     const displayName = baseTitle + (displayColor ? ` (${displayColor})` : '');
@@ -101,8 +116,21 @@ window.addToCart = function(product, size, color) {
 
     if (existingItem) {
         existingItem.qty += 1;
+        existingItem.regularPrice = regularPrice;
+        existingItem.salePrice = salePrice;
+        existingItem.price = effectivePrice;
     } else {
-        window.cart.push({ id, baseTitle, name: displayName, price, size: size || 'Standard', color: displayColor, qty: 1 });
+        window.cart.push({
+            id,
+            baseTitle,
+            name: displayName,
+            price: effectivePrice,
+            regularPrice,
+            salePrice,
+            size: size || 'Standard',
+            color: displayColor,
+            qty: 1
+        });
     }
 
     window.updateCartUI();
@@ -111,7 +139,8 @@ window.addToCart = function(product, size, color) {
     if (cartSidebar && cartOverlay) {
         window.openCartSidebar();
     } else {
-        notify(t('addedToCart'), 'success');
+        const tFn = (typeof window.t === 'function') ? window.t : (k => k === 'addedToCart' ? 'Added to cart!' : k);
+        notify(tFn('addedToCart'), 'success');
     }
 };
 
@@ -127,10 +156,11 @@ window.removeFromCart = function(index) {
     window.updateCartUI();
 };
 
+// Outside Sylhet delivery charge updated to 130 TK
 function currentDeliveryFee() {
     const zoneSelect = document.getElementById('deliveryZone');
     if (!zoneSelect || !zoneSelect.value || window.cart.length === 0) return 0;
-    if (zoneSelect.value === 'outside' || zoneSelect.value === '150') return 150;
+    if (zoneSelect.value === 'outside' || zoneSelect.value === '130' || zoneSelect.value === '150') return 130;
     if (zoneSelect.value === 'inside' || zoneSelect.value === '80') return 80;
     return parseInt(zoneSelect.value, 10) || 0;
 }
@@ -138,14 +168,15 @@ function currentDeliveryFee() {
 window.updateDeliveryPolicyAndTotal = function() {
     const zoneSelect = document.getElementById('deliveryZone');
     const policyDisplay = document.getElementById('dynamicPolicyDisplay');
+    const tFn = (typeof window.t === 'function') ? window.t : (k => k);
 
     if (zoneSelect && policyDisplay) {
         if (zoneSelect.value === '80' || zoneSelect.value === 'inside') {
             policyDisplay.style.display = 'block';
-            policyDisplay.innerHTML = t('zoneDeliveryInside');
-        } else if (zoneSelect.value === '150' || zoneSelect.value === 'outside') {
+            policyDisplay.innerHTML = tFn('zoneDeliveryInside') || 'Inside Sylhet City: ৳80';
+        } else if (zoneSelect.value === '130' || zoneSelect.value === '150' || zoneSelect.value === 'outside') {
             policyDisplay.style.display = 'block';
-            policyDisplay.innerHTML = t('zoneDeliveryOutside');
+            policyDisplay.innerHTML = tFn('zoneDeliveryOutside') || 'Outside Sylhet: ৳130';
         } else {
             policyDisplay.style.display = 'none';
         }
@@ -153,21 +184,50 @@ window.updateDeliveryPolicyAndTotal = function() {
     window.updateCartUI();
 };
 
+// Render Cart Total Savings Indicators ("You save ৳ X on this order!")
+function renderSavingsIndicators(totalSavings) {
+    const savingsTargets = [
+        document.getElementById('cartSavings'),
+        document.getElementById('cartSavingsIndicator'),
+        document.getElementById('checkoutSavings')
+    ];
+
+    const isBn = window.currentLang === 'bn';
+    const formattedSavings = totalSavings.toLocaleString('en-IN');
+    const savingsMsg = isBn
+        ? `আপনি এই অর্ডারে ৳ ${formattedSavings} সাশ্রয় করছেন!`
+        : `You save ৳ ${formattedSavings} on this order!`;
+
+    savingsTargets.forEach(container => {
+        if (!container) return;
+        if (totalSavings > 0) {
+            container.style.display = 'block';
+            container.className = 'cart-savings-indicator';
+            container.innerHTML = `<span class="savings-icon">🎉</span> ${savingsMsg}`;
+        } else {
+            container.style.display = 'none';
+            container.innerHTML = '';
+        }
+    });
+}
+
 window.updateCartUI = function() {
     localStorage.setItem('mohor_cart', JSON.stringify(window.cart));
 
     if (cartItemsContainer) cartItemsContainer.innerHTML = '';
     let subtotal = 0;
+    let totalSavings = 0;
     let totalItems = 0;
+    const tFn = (typeof window.t === 'function') ? window.t : (k => k);
 
     if (window.cart.length === 0) {
         if (cartItemsContainer) {
             cartItemsContainer.innerHTML = `
                 <div class="cart-empty">
                     <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                    <div>${t('cartEmpty')}</div>
-                    <div style="font-size:.78rem;margin:4px 0 16px;">${t('cartEmptySub')}</div>
-                    <button type="button" class="btn btn-outline btn-sm" id="continueShoppingBtn">${t('continueShopping')}</button>
+                    <div>${tFn('cartEmpty') || 'Your cart is empty'}</div>
+                    <div style="font-size:.78rem;margin:4px 0 16px;">${tFn('cartEmptySub') || 'Looks like you haven\'t added anything yet.'}</div>
+                    <button type="button" class="btn btn-outline btn-sm" id="continueShoppingBtn">${tFn('continueShopping') || 'Continue Shopping'}</button>
                 </div>`;
             const csBtn = document.getElementById('continueShoppingBtn');
             if (csBtn) csBtn.addEventListener('click', () => {
@@ -177,14 +237,23 @@ window.updateCartUI = function() {
         }
     } else {
         window.cart.forEach((item, index) => {
-            const itemTotal = Number(item.price || 0) * Number(item.qty || 1);
+            const details = getCanonicalItemDetails(item);
+            const itemTotal = details.effectivePrice * Number(item.qty || 1);
+            const itemSavings = details.savingsPerUnit * Number(item.qty || 1);
+
             subtotal += itemTotal;
+            totalSavings += itemSavings;
             totalItems += Number(item.qty || 1);
+
             if (!cartItemsContainer) return;
 
             const metaParts = [];
             if (item.size) metaParts.push('Size: ' + escapeHtml(item.size));
             if (item.color) metaParts.push('Color: ' + escapeHtml(item.color));
+
+            const priceMarkup = (details.savingsPerUnit > 0)
+                ? `<span class="price-original" style="text-decoration:line-through;color:#888;font-size:0.82em;margin-right:4px;">৳${details.regularPrice * item.qty}</span> ৳${itemTotal}`
+                : `৳${itemTotal}`;
 
             const row = document.createElement('div');
             row.className = 'cart-item';
@@ -199,7 +268,7 @@ window.updateCartUI = function() {
                     </div>
                 </div>
                 <div class="cart-item-right">
-                    <div class="cart-item-price">৳${itemTotal}</div>
+                    <div class="cart-item-price">${priceMarkup}</div>
                     <button type="button" class="remove-item">Remove</button>
                 </div>`;
             row.querySelector('[data-action="dec"]').addEventListener('click', () => window.changeQty(index, -1));
@@ -219,6 +288,9 @@ window.updateCartUI = function() {
     if (delEl) delEl.innerText = deliveryFee;
     if (totEl) totEl.innerText = finalTotal;
 
+    // Render Savings Banner
+    renderSavingsIndicators(totalSavings);
+
     if (cartBadge) { cartBadge.innerText = totalItems; cartBadge.setAttribute('data-count', String(totalItems)); }
     const iconBadge = document.getElementById('cartBadgeIcon');
     if (iconBadge) { iconBadge.innerText = totalItems; iconBadge.style.display = totalItems > 0 ? 'flex' : 'none'; }
@@ -233,8 +305,9 @@ function fieldFlash(el) {
 }
 
 function validateCheckoutInputs() {
+    const tFn = (typeof window.t === 'function') ? window.t : (k => k);
     if (window.cart.length === 0) {
-        notify(t('cartEmpty'), 'error');
+        notify(tFn('cartEmpty') || 'Your cart is empty', 'error');
         return null;
     }
 
@@ -281,21 +354,22 @@ function validateCheckoutInputs() {
     const zoneText = zoneSelect.options[zoneSelect.selectedIndex].text;
     const deliveryFee = Number(currentDeliveryFee()) || 0;
 
-    // Recompute subtotal from canonical product prices to avoid trusting mutable client-side values
+    // Recompute subtotal and savings from canonical product prices to avoid trusting mutable client-side values
     let canonicalSubtotal = 0;
+    let totalSavings = 0;
     try {
         window.cart.forEach(item => {
-            const price = (typeof getCanonicalPrice === 'function') ? getCanonicalPrice(item) : (Number(item.price) || 0);
-            canonicalSubtotal += (Number(price) || 0) * (Number(item.qty) || 1);
+            const details = getCanonicalItemDetails(item);
+            canonicalSubtotal += details.effectivePrice * (Number(item.qty) || 1);
+            totalSavings += details.savingsPerUnit * (Number(item.qty) || 1);
         });
     } catch (e) {
         console.warn('Error computing canonical subtotal', e);
-        // fallback to client-side prices
         window.cart.forEach(item => canonicalSubtotal += (Number(item.price) || 0) * (Number(item.qty) || 1));
     }
 
     const finalTotal = canonicalSubtotal + deliveryFee;
-    return { name: nameInput, phone: phoneInput, address: addressInput, zoneText, deliveryFee, subtotal: canonicalSubtotal, finalTotal };
+    return { name: nameInput, phone: phoneInput, address: addressInput, zoneText, deliveryFee, subtotal: canonicalSubtotal, totalSavings, finalTotal };
 }
 
 function resetCheckoutFormsIfGuest(isGuest) {
@@ -323,16 +397,19 @@ window.checkoutToWhatsApp = function() {
     const WHATSAPP_NUMBER = '8801330113027';
     let message = 'Hello Mohor Clothings! I would like to order the following items:%0A%0A';
     window.cart.forEach((item, index) => {
-        const itemTotal = Number(item.price) * Number(item.qty);
+        const details = getCanonicalItemDetails(item);
+        const itemTotal = details.effectivePrice * Number(item.qty);
         message += `${index + 1}. ${item.name} (Size: ${item.size}) | Qty: ${item.qty} - ৳${itemTotal}%0A`;
     });
     message += `%0A*Subtotal: ৳${orderData.subtotal}*`;
+    if (orderData.totalSavings > 0) {
+        message += `%0A*Total Savings: ৳${orderData.totalSavings}*`;
+    }
     message += `%0A*Delivery (${orderData.zoneText}): ৳${orderData.deliveryFee}*`;
     message += `%0A*FINAL TOTAL: ৳${orderData.finalTotal}*%0A`;
     message += `%0A*CUSTOMER DETAILS:*%0AName: ${orderData.name}%0APhone: ${orderData.phone}%0AAddress: ${orderData.address}`;
 
-    // Open WhatsApp first — only clear the cart once we know the redirect fired,
-    // so a blocked popup doesn't silently wipe the customer's order.
+    // Open WhatsApp first — only clear the cart once we know the redirect fired
     const win = window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, '_blank');
     window.cart = [];
     window.updateCartUI();
@@ -360,14 +437,22 @@ window.checkoutToAdmin = async function() {
         }
 
         // SECURITY: recompute each line item from canonical catalog and force Number types
-        const verifiedItems = window.cart.map(item => ({
-            name: String(item.name || item.baseTitle || 'Item'),
-            size: String(item.size || 'Standard'),
-            qty: Number(item.qty) || 1,
-            price: Number(getCanonicalPrice(item)) || 0
-        }));
+        const verifiedItems = window.cart.map(item => {
+            const details = getCanonicalItemDetails(item);
+            return {
+                name: String(item.name || item.baseTitle || 'Item'),
+                size: String(item.size || 'Standard'),
+                color: String(item.color || 'Default'),
+                qty: Number(item.qty) || 1,
+                price: Number(details.effectivePrice) || 0,
+                regularPrice: Number(details.regularPrice) || 0,
+                salePrice: Number(details.salePrice) || 0,
+                savings: Number(details.savingsPerUnit * (item.qty || 1)) || 0
+            };
+        });
 
         const verifiedSubtotal = Number(verifiedItems.reduce((sum, item) => sum + (item.price * item.qty), 0)) || 0;
+        const verifiedTotalSavings = Number(verifiedItems.reduce((sum, item) => sum + item.savings, 0)) || 0;
         const verifiedTotal = Number(verifiedSubtotal + (orderData.deliveryFee || 0)) || 0;
 
         const dbInstance = window.db || (typeof firebase !== 'undefined' && firebase.firestore ? firebase.firestore() : null);
@@ -381,6 +466,7 @@ window.checkoutToAdmin = async function() {
             deliveryZone: String(orderData.zoneText),
             deliveryFee: Number(orderData.deliveryFee) || 0,
             subtotal: verifiedSubtotal,
+            totalSavings: verifiedTotalSavings,
             totalAmount: verifiedTotal,
             items: verifiedItems,
             // Use serverTimestamp so ordering and timezone are canonical
