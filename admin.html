@@ -867,8 +867,14 @@ document.getElementById('confirm-modal-ok').addEventListener('click', () => {
 });
 confirmOverlay.addEventListener('click', (e) => { if (e.target === confirmOverlay) closeConfirm(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && confirmOverlay.classList.contains('active')) closeConfirm(); });
-function showConfirm(message, onConfirm) {
+
+function showConfirm(message, onConfirm, actionText = 'Delete', isDanger = true) {
   document.getElementById('confirm-modal-message').textContent = message;
+  const okBtn = document.getElementById('confirm-modal-ok');
+  if (okBtn) {
+    okBtn.textContent = actionText;
+    okBtn.className = isDanger ? 'btn btn-danger' : 'btn btn-primary';
+  }
   confirmCallback = onConfirm;
   confirmOverlay.classList.add('active');
   document.body.classList.add('no-scroll');
@@ -1291,7 +1297,7 @@ function handleDeleteProduct(id) {
       console.error('Delete error:', err);
       showToast('Failed to delete product: ' + err.message, 'error');
     }
-  });
+  }, 'Delete', true);
 }
 
 /* ---------- STOREWIDE BULK DISCOUNT & BANNER LOGIC ---------- */
@@ -1342,7 +1348,7 @@ async function applyStorewideDiscount() {
       console.error('Bulk discount error:', err);
       showToast('Failed to apply bulk discount: ' + err.message, 'error');
     }
-  });
+  }, 'Apply Discount', false);
 }
 
 async function resetAllDiscounts() {
@@ -1377,7 +1383,7 @@ async function resetAllDiscounts() {
       console.error('Reset error:', err);
       showToast('Failed to reset discounts: ' + err.message, 'error');
     }
-  });
+  }, 'Reset Discounts', true);
 }
 
 document.getElementById('apply-bulk-discount-btn').addEventListener('click', applyStorewideDiscount);
@@ -1656,7 +1662,7 @@ function handleDeleteOrder(orderId, onDeleted) {
       console.error('Delete order error:', err);
       showToast('Failed to delete order: ' + err.message, 'error');
     }
-  });
+  }, 'Delete', true);
 }
 
 /* Bulk delete for clearing out test/fake orders quickly */
@@ -1668,7 +1674,7 @@ function handleBulkDeleteOrders(ids, scopeLabel) {
     historySelectedIds.clear();
     if (failed === 0) showToast(`${ids.length} order${ids.length === 1 ? '' : 's'} deleted.`, 'success');
     else showToast(`${ids.length - failed} of ${ids.length} orders deleted. ${failed} failed.`, 'error');
-  });
+  }, 'Delete', true);
 }
 
 function getHistoryScopedOrders() {
