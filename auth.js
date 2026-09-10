@@ -1,6 +1,6 @@
 // ==========================================================================
 // MOHOR CLOTHINGS — auth.js
-// Firebase Auth (compat) + customer profile / order history.
+// Firebase Auth (compat) + customer profile / order history & savings engine.
 // ==========================================================================
 
 window.currentUser = null;
@@ -93,10 +93,7 @@ window.toggleAuthMode = function() {
     window.showAuthView(showingLogin ? 'signup' : 'login');
 };
 
-// --- One canonical place to push saved profile data into every form on the
-// site that can use it (Account > Profile tab, and any checkout fields that
-// are still empty). Consolidates what used to be four separate, slightly
-// inconsistent copies of this logic scattered across pages. ---
+// --- Canonical user profile injector into forms across the site ---
 function applyUserDataToForms(data) {
     if (!data) return;
     const name = data.customerName || data.name || data.fullName || (window.currentUser && window.currentUser.displayName) || '';
@@ -111,8 +108,7 @@ function applyUserDataToForms(data) {
     setVal('profilePhone', phone);
     setVal('profileAddress', address);
 
-    // Checkout convenience fields: only prefill if the visitor hasn't typed
-    // something already, so we never clobber an in-progress edit.
+    // Checkout convenience fields: only prefill if empty
     fillIfEmpty('custName', name); fillIfEmpty('checkoutName', name);
     fillIfEmpty('custPhone', phone); fillIfEmpty('checkoutPhone', phone);
     fillIfEmpty('deliveryAddress', address); fillIfEmpty('checkoutAddress', address);
@@ -132,23 +128,22 @@ async function loadUserOrders(uid) {
     container.innerHTML = `<p class="order-history-loading">${tr('accLoadingOrders') || 'Loading orders…'}</p>`;
 
     // Resolve current user info if available
-    const current = window.currentUser || (firebase && firebase.auth && firebase.auth().currentUser) || null;
+    const current = window.currentUser || (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) || null;
     const email = current && current.email ? current.email : null;
 
     try {
         let querySnapshot = null;
 
-        // 1) Prefer querying by userId (if clients saved it)
+        // 1) Prefer querying by userId
         if (uid) {
             try {
                 querySnapshot = await db.collection('orders').where('userId', '==', uid).orderBy('orderDate', 'desc').get();
             } catch (indexErr) {
-                // fallback without index
                 querySnapshot = await db.collection('orders').where('userId', '==', uid).get();
             }
         }
 
-        // 2) If no results, try matching by user email (many orders are created by guests with email)
+        // 2) Fallback to matching by user email
         if ((!querySnapshot || querySnapshot.empty) && email) {
             try {
                 querySnapshot = await db.collection('orders').where('userEmail', '==', email).orderBy('orderDate', 'desc').get();
@@ -157,7 +152,7 @@ async function loadUserOrders(uid) {
             }
         }
 
-        // 3) If still empty, try phone stored on profile (best-effort)
+        // 3) Fallback to phone stored on profile
         if ((!querySnapshot || querySnapshot.empty) && current) {
             const userDoc = await db.collection('users').doc(current.uid).get();
             const phone = userDoc.exists ? (userDoc.data().phone || userDoc.data().customerPhone || null) : null;
@@ -178,7 +173,6 @@ async function loadUserOrders(uid) {
         const rows = [];
         querySnapshot.forEach((doc) => {
             const order = doc.data();
-            // Handle Firestore Timestamp or ISO string
             let orderDate = order.orderDate || order.createdAt || null;
             let actualDate = null;
             if (orderDate && typeof orderDate.toDate === 'function') actualDate = orderDate.toDate();
@@ -192,14 +186,26 @@ async function loadUserOrders(uid) {
             const custName = order.customerName || order.custName || order.name || '';
             const custPhone = order.customerPhone || order.custPhone || order.phone || '';
             const address = order.deliveryAddress || order.address || '';
+            const items = order.items || [];
+
+            // Calculate or extract total savings
+            let totalSavings = Number(order.totalSavings) || 0;
+            if (!totalSavings && Array.isArray(items)) {
+                totalSavings = items.reduce((sum, it) => {
+                    const reg = Number(it.regularPrice) || Number(it.price) || 0;
+                    const eff = Number(it.price) || Number(it.salePrice) || reg;
+                    return sum + (Math.max(0, reg - eff) * (Number(it.qty || it.quantity) || 1));
+                }, 0);
+            }
 
             rows.push({
                 id: doc.id,
                 total: Number(order.totalAmount) || 0,
+                totalSavings,
                 status,
                 date: formattedDate,
                 time: formattedTime,
-                items: order.items || [],
+                items,
                 raw: actualDate.getTime(),
                 customerName: custName,
                 customerPhone: custPhone,
@@ -227,13 +233,33 @@ async function loadUserOrders(uid) {
                     </div>
                 </div>
 
+                ${r.totalSavings > 0 ? `<div style="font-size:0.82rem; color:#52c480; margin-top:10px; font-weight:600;">🎉 You saved ৳${esc(r.totalSavings)} on this order!</div>` : ''}
+
                 <div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
                     <a class="btn btn-outline btn-sm" href="order.html?id=${esc(r.id)}" style="text-decoration:none; padding:6px 14px; font-size:12px;">View Details</a>
                     <button type="button" class="btn btn-ghost btn-sm" style="padding:6px 14px; font-size:12px;" onclick="(function(btn){ const items=btn.closest('.order-history-item').querySelector('.order-items'); if(items) items.style.display = (items.style.display === 'none' || !items.style.display) ? 'block' : 'none'; })(this)">Toggle items</button>
                 </div>
 
                 <div class="order-items" style="display:none; margin-top:12px; border-top:1px solid #282828; padding-top:10px;">
-                    ${r.items.map(it => `<div style="padding:8px 10px; border:1px solid #282828; margin-bottom:6px; border-radius:6px; font-size:0.85rem; display:flex; justify-content:space-between; align-items:center; background:#181818;"><div><strong>${esc(it.name || it.title || 'Item')}</strong> ${it.size || it.variant ? `<span style="color:#888;">(${esc(it.size || it.variant)})</span>` : ''}</div><div>qty: ${esc(it.qty || it.quantity || 1)} — ৳${esc((it.qty || it.quantity || 1) * (it.price || it.unitPrice || 0))}</div></div>`).join('')}
+                    ${r.items.map(it => {
+                        const qty = Number(it.qty || it.quantity) || 1;
+                        const price = Number(it.price || it.salePrice) || 0;
+                        const regPrice = Number(it.regularPrice) || price;
+                        const hasDiscount = regPrice > price;
+
+                        return `
+                        <div style="padding:8px 10px; border:1px solid #282828; margin-bottom:6px; border-radius:6px; font-size:0.85rem; display:flex; justify-content:space-between; align-items:center; background:#181818;">
+                            <div>
+                                <strong>${esc(it.name || it.title || 'Item')}</strong> 
+                                ${it.size || it.variant ? `<span style="color:#888;">(${esc(it.size || it.variant)})</span>` : ''}
+                                ${it.color ? `<span style="color:#888;">&middot; ${esc(it.color)}</span>` : ''}
+                            </div>
+                            <div>
+                                ${hasDiscount ? `<span style="text-decoration:line-through; color:#777; margin-right:4px; font-size:0.78rem;">৳${esc(regPrice * qty)}</span>` : ''}
+                                qty: ${esc(qty)} — ৳${esc(price * qty)}
+                            </div>
+                        </div>`;
+                    }).join('')}
                 </div>
             </div>`;
         }).join('');
