@@ -22,7 +22,7 @@ window.uiTranslations = {
         shopSubtitle: "Handcrafted three-piece sets, kurtis and khadi wear — cut and stitched in small batches.",
         filterBtn: "Filters", closeFilters: "Close",
         sortDefault: "Sort by: Featured", sortLowHigh: "Price: Low to High", sortHighLow: "Price: High to Low",
-        catTitle: "Category", catKurti: "Kurti", catThreePiece: "Three Piece", catKhadi: "Khadi", catFormal: "Formal Wear",
+        catTitle: "Category", catKurti: "Kurti", catThreePiece: "Three Piece", catKhadi: "Khadi", catFormal: "Formal Wear", catOnSale: "🔥 On Sale",
         priceTitle: "Price", price1: "Under ৳1500", price2: "৳1500 – ৳2500", price3: "Above ৳2500",
         clearFilters: "Clear all",
         noProducts: "No pieces match your filters just yet. Try clearing a few and searching again.",
@@ -77,6 +77,13 @@ window.uiTranslations = {
 
         loginPageTitle: "Welcome to Mohor", loginPageSub: "Log in to save your details for faster checkout.",
         continueGuest: "Continue as Guest",
+        
+        // Blueprint Additions
+        promoEndsIn: "Ends in:",
+        relatedProductsTitle: "You May Also Like",
+        relatedProductsSub: "Handpicked matching items from our collection",
+        cartSavingsText: "You are saving",
+        cartSavingsOrder: "on this order!"
     },
     bn: {
         navShop: "শপ", navOrders: "অর্ডার হিস্ট্রি", navAbout: "আমাদের সম্পর্কে", navPolicy: "পলিসি", navAccount: "অ্যাকাউন্ট", navCart: "কার্ট",
@@ -84,7 +91,7 @@ window.uiTranslations = {
         shopSubtitle: "হাতে তৈরি থ্রি-পিস, কুর্তি ও খাদি — অল্প সংখ্যায় যত্নসহকারে তৈরি।",
         filterBtn: "ফিল্টার", closeFilters: "বন্ধ করুন",
         sortDefault: "সাজান: ফিচার্ড", sortLowHigh: "দাম: কম থেকে বেশি", sortHighLow: "দাম: বেশি থেকে কম",
-        catTitle: "ক্যাটাগরি", catKurti: "কুর্তি", catThreePiece: "থ্রি-পিস", catKhadi: "খাদি", catFormal: "ফরমাল ওয়্যার",
+        catTitle: "ক্যাটাগরি", catKurti: "কুর্তি", catThreePiece: "থ্রি-পিস", catKhadi: "খাদি", catFormal: "ফরমাল ওয়্যার", catOnSale: "🔥 ছাড়ের পণ্য",
         priceTitle: "মূল্য", price1: "৳১৫০০ এর নিচে", price2: "৳১৫০০ – ৳২৫০০", price3: "৳২৫০০ এর উপরে",
         clearFilters: "সব মুছুন",
         noProducts: "আপনার ফিল্টারের সাথে মিলছে এমন কিছু পাওয়া যায়নি। কিছু ফিল্টার মুছে আবার চেষ্টা করুন।",
@@ -139,6 +146,13 @@ window.uiTranslations = {
 
         loginPageTitle: "মোহর-এ স্বাগতম", loginPageSub: "দ্রুত চেকআউটের জন্য লগইন করে আপনার তথ্য সংরক্ষণ করুন।",
         continueGuest: "গেস্ট হিসেবে চালিয়ে যান",
+
+        // Blueprint Additions
+        promoEndsIn: "শেষ হতে বাকি:",
+        relatedProductsTitle: "আপনার পছন্দ হতে পারে",
+        relatedProductsSub: "আমাদের কালেকশন থেকে আপনার জন্য বিশেষ নির্বাচন",
+        cartSavingsText: "আপনি সেভ করছেন",
+        cartSavingsOrder: "এই অর্ডারে!"
     }
 };
 
@@ -178,6 +192,7 @@ function updateUIText() {
     if (document.getElementById('productGrid')) window.updateProducts();
     if (typeof window.updateCartUI === "function") window.updateCartUI();
     if (typeof window.updateDeliveryPolicyAndTotal === "function") window.updateDeliveryPolicyAndTotal();
+    if (typeof window.updateCartSavingsSummary === "function") window.updateCartSavingsSummary();
 }
 window.updateUIText = updateUIText;
 
@@ -214,7 +229,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
             const cur = localStorage.getItem('mohor_theme') || 'system';
-            // cycle: system -> dark -> light -> system
             let next = 'dark';
             if (cur === 'system') next = 'dark';
             else if (cur === 'dark') next = 'light';
@@ -273,7 +287,6 @@ function ensureToastStack() {
     if (!stack) {
         stack = document.createElement('div');
         stack.id = 'toast-stack';
-        // Announce to assistive tech and ensure full text is read
         stack.setAttribute('aria-live', 'polite');
         stack.setAttribute('role', 'status');
         stack.setAttribute('aria-atomic', 'true');
@@ -345,6 +358,123 @@ ${itemsText}
 };
 
 // ==========================================================================
+// FEATURE 1: PROMOTIONAL & DISCOUNT ENGINE (PRICING & BANNER COUNTDOWN)
+// ==========================================================================
+window.getProductPricing = function(product) {
+    const price = Number(product.price || 0);
+    const regularPrice = Number(product.regularPrice || product.originalPrice || 0);
+    const isOnSale = (regularPrice > price) || !!product.onSale;
+    let savingsAmt = 0;
+    let discountPercent = 0;
+
+    if (regularPrice > price) {
+        savingsAmt = regularPrice - price;
+        discountPercent = Math.round((savingsAmt / regularPrice) * 100);
+    }
+
+    return { price, regularPrice, isOnSale, savingsAmt, discountPercent };
+};
+
+let promoCountdownTimer = null;
+function initPromoBannerAndCountdown() {
+    const banner = document.getElementById('topPromoBanner');
+    const badge = document.getElementById('promoBadge');
+    const text = document.getElementById('promoBannerText');
+    const countdownWrap = document.getElementById('promoCountdown');
+    const timerDisplay = document.getElementById('promoTimer');
+    const closeBtn = document.getElementById('closePromoBannerBtn');
+
+    if (!banner) return;
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            banner.style.display = 'none';
+            sessionStorage.setItem('mohor_promo_closed', 'true');
+        });
+    }
+
+    if (sessionStorage.getItem('mohor_promo_closed') === 'true') {
+        banner.style.display = 'none';
+        return;
+    }
+
+    if (typeof window.db === 'undefined' || !window.db) return;
+
+    window.db.collection("settings").doc("storefront").get().then(doc => {
+        if (!doc.exists) return;
+        const data = doc.data();
+
+        if (data.saleActive && data.bannerText) {
+            banner.style.display = 'block';
+            if (badge && data.bannerBadge) badge.innerText = data.bannerBadge;
+            if (text) text.innerText = data.bannerText;
+
+            if (data.saleEndTime) {
+                const expiryMs = new Date(data.saleEndTime).getTime();
+                if (expiryMs > Date.now()) {
+                    if (countdownWrap) countdownWrap.style.display = 'inline-flex';
+                    if (promoCountdownTimer) clearInterval(promoCountdownTimer);
+
+                    promoCountdownTimer = setInterval(() => {
+                        const now = Date.now();
+                        const diff = expiryMs - now;
+
+                        if (diff <= 0) {
+                            clearInterval(promoCountdownTimer);
+                            banner.style.display = 'none';
+                        } else {
+                            const hours = Math.floor(diff / (1000 * 60 * 60));
+                            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                            const secs = Math.floor((diff % (1000 * 60)) / 1000);
+                            if (timerDisplay) {
+                                timerDisplay.innerText = `${String(hours).padStart(2, '0')}h ${String(mins).padStart(2, '0')}m ${String(secs).padStart(2, '0')}s`;
+                            }
+                        }
+                    }, 1000);
+                } else {
+                    if (countdownWrap) countdownWrap.style.display = 'none';
+                }
+            } else if (countdownWrap) {
+                countdownWrap.style.display = 'none';
+            }
+        } else {
+            banner.style.display = 'none';
+        }
+    }).catch(err => console.warn("Promo banner fetch error:", err));
+}
+
+// Cart Savings Indicator Helper
+window.updateCartSavingsSummary = function() {
+    const banner = document.getElementById('cartSavingsBanner');
+    const amountSpan = document.getElementById('cartSavingsAmount');
+    if (!banner || !amountSpan) return;
+
+    try {
+        const rawCart = localStorage.getItem('mohor_cart');
+        if (!rawCart) { banner.style.display = 'none'; return; }
+        const cart = JSON.parse(rawCart);
+        if (!Array.isArray(cart) || cart.length === 0) { banner.style.display = 'none'; return; }
+
+        let totalSavings = 0;
+        cart.forEach(item => {
+            const pricing = window.getProductPricing(item);
+            if (pricing.isOnSale) {
+                totalSavings += pricing.savingsAmt * (item.qty || 1);
+            }
+        });
+
+        if (totalSavings > 0) {
+            amountSpan.innerText = `৳ ${totalSavings.toLocaleString()}`;
+            banner.style.display = 'block';
+        } else {
+            banner.style.display = 'none';
+        }
+    } catch (e) {
+        banner.style.display = 'none';
+    }
+};
+
+// ==========================================================================
 // Product catalog loading (Firestore, memoized so every page can safely
 // call/await this without triggering duplicate reads)
 // ==========================================================================
@@ -363,6 +493,8 @@ window.loadStoreProducts = function() {
                     title: data.title || "Dress",
                     category: data.category || "three-piece",
                     price: Number(data.price || 0),
+                    regularPrice: Number(data.regularPrice || data.originalPrice || 0),
+                    onSale: !!data.onSale,
                     images: data.images || [],
                     colors: data.colors || [],
                     sizes: data.sizes || [],
@@ -418,7 +550,10 @@ function renderProducts(productsToRender) {
     productsToRender.forEach(product => {
         const card = document.createElement('div');
         card.className = 'product-card';
-        card.onclick = () => {
+        card.onclick = (e) => {
+            // Prevent card modal click if interacting with slider controls
+            if (e.target.closest('.card-slider-dots') || e.target.closest('.card-slider-btn')) return;
+
             if (window.innerWidth <= 900) {
                 window.location.href = `product.html?id=${String(product.id)}`;
             } else {
@@ -428,16 +563,48 @@ function renderProducts(productsToRender) {
 
         const displayTitle = getText(product.title);
         const displayCategory = (product.category || "").replace('-', ' ');
+        const pricing = window.getProductPricing(product);
 
-        // Google Image Search optimization with brand terms
+        const images = (product.images && product.images.length > 0) ? product.images : ['assets/image-placeholder.svg'];
+        const hasMultipleImages = images.length > 1;
+
+        // FEATURE 1: Sale Badge HTML
+        const saleBadgeHtml = pricing.isOnSale 
+            ? `<span class="card-badge-sale">-${pricing.discountPercent}%</span>` 
+            : '';
+
+        // FEATURE 1: Strikethrough Pricing HTML
+        const priceDisplayHtml = pricing.isOnSale
+            ? `<div class="card-price"><span class="sale-price">৳ ${pricing.price}</span> <del class="old-price">৳ ${pricing.regularPrice}</del></div>`
+            : `<div class="card-price">৳ ${pricing.price}</div>`;
+
+        // FEATURE 2: In-Card Image Slideshow HTML
+        let mediaContentHtml = '';
+        if (hasMultipleImages && viewMode !== 'list') {
+            const dotsHtml = images.map((_, idx) => `<span class="slider-dot ${idx === 0 ? 'active' : ''}" data-index="${idx}"></span>`).join('');
+            const slidesHtml = images.map((imgSrc, idx) => `
+                <img src="${imgSrc}" class="card-slide-img ${idx === 0 ? 'active' : ''}" alt="${displayTitle} - Mohor Clothings Mohor Dress Image ${idx + 1}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">
+            `).join('');
+
+            mediaContentHtml = `
+                <div class="card-slider-container">
+                    ${slidesHtml}
+                    <div class="card-slider-dots">${dotsHtml}</div>
+                </div>
+            `;
+        } else {
+            mediaContentHtml = `<img src="${productCoverImage(product)}" alt="${displayTitle} - Mohor Clothings Mohor Dress" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">`;
+        }
+
         if (viewMode === 'list') {
             card.innerHTML = `
                 <div class="card-media">
-                    <img src="${productCoverImage(product)}" alt="${displayTitle} - Mohor Clothings Mohor Dress" loading="lazy" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">
+                    ${saleBadgeHtml}
+                    ${mediaContentHtml}
                 </div>
                 <div class="card-body">
                     <div class="card-title">${displayTitle}</div>
-                    <div class="card-price">৳ ${product.price}</div>
+                    ${priceDisplayHtml}
                     <div class="card-desc">${(getText(product.description) || '').slice(0,140)}</div>
                     <div style="margin-top:10px;"><button type="button" class="btn btn-outline btn-quickview">Quick View</button></div>
                 </div>
@@ -445,16 +612,33 @@ function renderProducts(productsToRender) {
         } else {
             card.innerHTML = `
                 <div class="card-media">
+                    ${saleBadgeHtml}
                     <span class="card-cat">${displayCategory}</span>
-                    <img src="${productCoverImage(product)}" alt="${displayTitle} - Mohor Clothings Mohor Dress" loading="lazy" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">
+                    ${mediaContentHtml}
                     <div class="card-quick">Quick View</div>
                 </div>
                 <div class="card-body">
                     <div class="card-title">${displayTitle}</div>
-                    <div class="card-price">৳ ${product.price}</div>
+                    ${priceDisplayHtml}
                     <button type="button" class="card-cta">${t('selectOptions')}</button>
                 </div>
             `;
+        }
+
+        // FEATURE 2: Attach slider dot click handlers
+        if (hasMultipleImages && viewMode !== 'list') {
+            const dots = card.querySelectorAll('.slider-dot');
+            const slides = card.querySelectorAll('.card-slide-img');
+            dots.forEach(dot => {
+                dot.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    const targetIndex = Number(dot.getAttribute('data-index'));
+                    dots.forEach(d => d.classList.remove('active'));
+                    slides.forEach(s => s.classList.remove('active'));
+                    dot.classList.add('active');
+                    if (slides[targetIndex]) slides[targetIndex].classList.add('active');
+                });
+            });
         }
 
         // Make card keyboard-focusable and accessible
@@ -495,7 +679,6 @@ function initViewControls() {
     const apply = () => {
         const mode = localStorage.getItem('mohor_view_mode') || 'grid';
         if (productGrid) productGrid.classList.toggle('view-list', mode === 'list');
-        // re-render current products to apply layout
         if (window._lastRenderedProducts) renderProducts(window._lastRenderedProducts);
     };
 
@@ -509,8 +692,6 @@ function initViewControls() {
 const origUpdateProducts = updateProducts;
 window.updateProducts = function() {
     origUpdateProducts();
-    const grid = document.getElementById('productGrid');
-    // capture last rendered source for view re-renders
     window._lastRenderedProducts = (Array.isArray(window.firestoreProducts) && window.firestoreProducts.length>0) ? window.firestoreProducts : (window.productsData || []);
 };
 
@@ -540,7 +721,15 @@ function updateProducts() {
     const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
     let filtered = sourceData.filter(product => {
-        let catMatch = activeCategories.length === 0 || activeCategories.includes(product.category);
+        const pricing = window.getProductPricing(product);
+        
+        // FEATURE 1: "On Sale" Quick Filter Matching
+        let catMatch = activeCategories.length === 0;
+        if (activeCategories.length > 0) {
+            if (activeCategories.includes('on-sale') && pricing.isOnSale) catMatch = true;
+            if (activeCategories.includes(product.category)) catMatch = true;
+        }
+
         let priceMatch = activePrices.length === 0;
 
         if (!priceMatch) {
@@ -549,8 +738,7 @@ function updateProducts() {
             if (activePrices.includes('above-2500') && product.price > 2500) priceMatch = true;
         }
 
-        // Smart broad search: expand category-adjacent words so a search for
-        // "office" still surfaces "formal" pieces, etc.
+        // Smart broad search
         let searchMatch = true;
         if (searchTerm !== '') {
             let productText = `${getText(product.title)} ${product.category || ''} ${getText(product.description) || ''}`.toLowerCase();
@@ -591,7 +779,59 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('productGrid')) {
         renderSkeletonGrid(8);
     }
+
+    initPromoBannerAndCountdown();
+    window.updateCartSavingsSummary();
 });
+
+// ==========================================================================
+// FEATURE 3: RELATED PRODUCTS RECOMMENDATION ENGINE (SMART FALLBACK LOGIC)
+// ==========================================================================
+function renderRelatedProducts(currentProduct) {
+    const container = document.getElementById('modalRelatedProducts');
+    if (!container) return;
+
+    container.innerHTML = '';
+    let sourceData = (Array.isArray(window.firestoreProducts) && window.firestoreProducts.length > 0)
+        ? window.firestoreProducts
+        : (window.productsData || []);
+
+    const allOtherProducts = sourceData.filter(p => String(p.id) !== String(currentProduct.id));
+    if (allOtherProducts.length === 0) return;
+
+    // Smart Category Matching
+    const sameCategoryItems = allOtherProducts.filter(p => p.category === currentProduct.category);
+    const otherCategoryItems = allOtherProducts.filter(p => p.category !== currentProduct.category);
+
+    // Dynamic Fallback Logic: ensure at least 3-4 recommendations
+    let recommendations = [...sameCategoryItems];
+    if (recommendations.length < 4) {
+        recommendations = recommendations.concat(otherCategoryItems.slice(0, 4 - recommendations.length));
+    }
+    recommendations = recommendations.slice(0, 4);
+
+    recommendations.forEach(relProduct => {
+        const pricing = window.getProductPricing(relProduct);
+        const card = document.createElement('div');
+        card.className = 'related-product-card';
+        card.onclick = () => openProductModal(relProduct);
+
+        card.innerHTML = `
+            <div class="rel-card-media">
+                ${pricing.isOnSale ? `<span class="rel-sale-badge">-${pricing.discountPercent}%</span>` : ''}
+                <img src="${productCoverImage(relProduct)}" alt="${getText(relProduct.title)} - Mohor Dress" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">
+            </div>
+            <div class="rel-card-info">
+                <div class="rel-card-title">${getText(relProduct.title)}</div>
+                <div class="rel-card-price">
+                    <span class="rel-price">৳ ${pricing.price}</span>
+                    ${pricing.isOnSale ? `<del class="rel-old-price">৳ ${pricing.regularPrice}</del>` : ''}
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
 
 // ==========================================================================
 // Quick-view modal (desktop)
@@ -599,10 +839,8 @@ document.addEventListener('DOMContentLoaded', () => {
 let currentViewingProduct = null;
 let selectedSize = null;
 let selectedColor = null;
-// Track last focused element so focus can be restored when dialogs close
 let _lastFocusedElement = null;
 
-// Simple focus trap for dialogs/modals (keyboard-only, small footprint)
 function trapFocus(container) {
     const selector = 'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])';
     const nodes = Array.from(container.querySelectorAll(selector)).filter(n => !n.hasAttribute('disabled') && n.getAttribute('tabindex') !== '-1');
@@ -618,7 +856,6 @@ function trapFocus(container) {
             e.preventDefault(); first.focus();
         }
     };
-    // store handler so it can be removed
     container._trapKeyHandler = handler;
     container.addEventListener('keydown', handler);
 }
@@ -667,8 +904,26 @@ function openProductModal(product) {
     const sizeGuideDisplay = document.getElementById('sizeGuideDisplay');
     if (sizeGuideDisplay) { sizeGuideDisplay.innerHTML = ""; sizeGuideDisplay.classList.remove('show'); }
 
+    const pricing = window.getProductPricing(product);
+
+    // FEATURE 1: Modal Price & Badges
     document.getElementById('modalTitle').innerText = getText(product.title);
-    document.getElementById('modalPrice').innerText = `৳ ${product.price}`;
+    document.getElementById('modalPrice').innerText = `৳ ${pricing.price}`;
+
+    const origPriceEl = document.getElementById('modalOriginalPrice');
+    const savingsTagEl = document.getElementById('modalSavingsTag');
+    const discountBadgeEl = document.getElementById('modalDiscountBadge');
+
+    if (pricing.isOnSale) {
+        if (origPriceEl) { origPriceEl.innerText = `৳ ${pricing.regularPrice}`; origPriceEl.style.display = 'inline-block'; }
+        if (savingsTagEl) { savingsTagEl.innerText = `Save ৳ ${pricing.savingsAmt}`; savingsTagEl.style.display = 'inline-block'; }
+        if (discountBadgeEl) { discountBadgeEl.innerText = `-${pricing.discountPercent}% OFF`; discountBadgeEl.style.display = 'inline-block'; }
+    } else {
+        if (origPriceEl) origPriceEl.style.display = 'none';
+        if (savingsTagEl) savingsTagEl.style.display = 'none';
+        if (discountBadgeEl) discountBadgeEl.style.display = 'none';
+    }
+
     document.getElementById('modalDesc').innerText = getText(product.description);
     const catLabel = document.getElementById('modalCategory');
     if (catLabel) catLabel.innerText = (product.category || '').replace('-', ' ');
@@ -678,13 +933,20 @@ function openProductModal(product) {
     thumbContainer.innerHTML = '';
 
     const images = (product.images && product.images.length > 0) ? product.images : ['assets/image-placeholder.svg'];
-    mainImage.innerHTML = `<img src="${images[0]}" alt="${getText(product.title)} - Mohor Clothings Mohor Dress" loading="lazy" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">`;
+    mainImage.innerHTML = `
+        ${pricing.isOnSale ? `<span class="modal-discount-badge">-${pricing.discountPercent}% OFF</span>` : ''}
+        <img src="${images[0]}" alt="${getText(product.title)} - Mohor Clothings Mohor Dress" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">
+    `;
+
     images.forEach((imgSrc, index) => {
         const thumb = document.createElement('div');
         thumb.className = 'thumbnail' + (index === 0 ? ' active' : '');
-        thumb.innerHTML = `<img src="${imgSrc}" alt="${getText(product.title)} Mohor Dress - Image ${index + 1}" loading="lazy" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">`;
+        thumb.innerHTML = `<img src="${imgSrc}" alt="${getText(product.title)} Mohor Dress - Image ${index + 1}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">`;
         thumb.onclick = () => {
-            mainImage.innerHTML = `<img src="${imgSrc}" alt="${getText(product.title)} - Mohor Clothings Mohor Dress" loading="lazy">`;
+            mainImage.innerHTML = `
+                ${pricing.isOnSale ? `<span class="modal-discount-badge">-${pricing.discountPercent}% OFF</span>` : ''}
+                <img src="${imgSrc}" alt="${getText(product.title)} - Mohor Clothings Mohor Dress" loading="lazy" decoding="async">
+            `;
             thumbContainer.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
             thumb.classList.add('active');
         };
@@ -721,13 +983,15 @@ function openProductModal(product) {
     const detailsSection = document.getElementById('modalDetailsSection');
     if (detailsSection) detailsSection.style.display = detailsArray.length ? 'block' : 'none';
 
-    // open modal visiblity and accessibility
+    // FEATURE 3: Render Related Products Inside Modal
+    renderRelatedProducts(product);
+
+    // open modal visibility and accessibility
     _lastFocusedElement = document.activeElement;
     productModal.classList.add('active');
     productModal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
 
-    // Trap keyboard focus and move focus into the modal for screen reader users
     trapFocus(productModal);
     const preferFocus = productModal.querySelector('#closeModalBtn') || productModal.querySelector('[tabindex]') || productModal.querySelector('button, a, input');
     if (preferFocus) preferFocus.focus();
@@ -770,7 +1034,6 @@ function closeProductModal() {
         releaseFocus(productModal);
     }
     document.body.style.overflow = '';
-    // restore prior focus so keyboard/screenreader users return to a sensible place
     try { if (_lastFocusedElement && typeof _lastFocusedElement.focus === 'function') setTimeout(() => _lastFocusedElement.focus(), 0); } catch (e) { /* ignore */ }
 }
 
@@ -813,7 +1076,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.addToCart(currentViewingProduct, selectedSize || 'Standard', selectedColor);
             }
 
-            // Track AddToCart event in Meta Pixel + CAPI
             if (typeof window.trackMetaEvent === "function" && currentViewingProduct) {
                 window.trackMetaEvent("AddToCart", {}, {
                     content_name: getText(currentViewingProduct.title),
@@ -828,7 +1090,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Buy Now from quick-view modal: add then navigate to cart
     const modalBuyNowBtn = document.getElementById('modalBuyNowBtn');
     if (modalBuyNowBtn) {
         modalBuyNowBtn.addEventListener('click', (e) => {
@@ -848,7 +1109,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.addToCart(currentViewingProduct, selectedSize || 'Standard', selectedColor);
             }
 
-            // Track AddToCart and InitiateCheckout events in Meta Pixel + CAPI
             if (typeof window.trackMetaEvent === "function" && currentViewingProduct) {
                 window.trackMetaEvent("AddToCart", {}, {
                     content_name: getText(currentViewingProduct.title),
@@ -919,8 +1179,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Hybrid responsive routing: on mobile, the cart icon goes to cart.html
-    // instead of opening the slide-over (captures before cart.js's own listener).
     const topNavCartBtn = document.getElementById('openCartBtn');
     if (topNavCartBtn) {
         topNavCartBtn.addEventListener('click', (e) => {
@@ -934,8 +1192,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================================================
-// Scroll reveal (IntersectionObserver) — applies to .reveal / .reveal-stagger
-// / .thread-draw elements already in the DOM at load time.
+// Scroll reveal (IntersectionObserver)
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
     if (!('IntersectionObserver' in window)) {
@@ -953,7 +1210,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('.reveal, .reveal-stagger, .thread-draw').forEach(el => io.observe(el));
 
-    // Product grid is populated asynchronously — watch for it too.
     const grid = document.getElementById('productGrid');
     if (grid) {
         const gridObserver = new MutationObserver(() => { if (!grid.classList.contains('in-view')) grid.classList.add('in-view'); });
@@ -970,6 +1226,9 @@ window.addEventListener('load', () => {
         const originalAddToCart = window.addToCart;
         window.addToCart = function(product, size, color) {
             originalAddToCart(product, size, color);
+            if (typeof window.updateCartSavingsSummary === 'function') {
+                window.updateCartSavingsSummary();
+            }
             if (product && typeof window.trackMetaEvent === 'function') {
                 window.trackMetaEvent("AddToCart", {}, {
                     content_name: window.getText ? window.getText(product.title) : (product.title || 'Product'),
@@ -983,5 +1242,4 @@ window.addEventListener('load', () => {
     }
 });
 
-// Fallback: ensure the page fades in even if DOMContentLoaded already fired.
 if (document.readyState !== 'loading') document.body.classList.add('is-ready');
