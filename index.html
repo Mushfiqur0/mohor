@@ -52,6 +52,19 @@
 </head>
 <body>
 
+    <!-- STICKY TOP PROMOTIONAL BANNER WITH LIVE COUNTDOWN -->
+    <div id="topPromoBanner" class="top-promo-banner" style="display: none;">
+        <div class="promo-banner-content container">
+            <span class="promo-badge" id="promoBadge">FLAT DISCOUNT</span>
+            <span id="promoBannerText">Exclusive Storewide Sale!</span>
+            <div id="promoCountdown" class="promo-countdown" style="display: none;">
+                <span data-i18n="promoEndsIn">Ends in:</span>
+                <strong id="promoTimer">00h 00m 00s</strong>
+            </div>
+            <button type="button" id="closePromoBannerBtn" class="promo-close-btn" aria-label="Close Announcement">&times;</button>
+        </div>
+    </div>
+
     <header class="site-header" id="siteHeader">
         <nav class="nav container">
             <a href="./" class="brand-logo" aria-label="Mohor Clothings — Home">
@@ -145,7 +158,7 @@
             </div>
 
             <div class="shop-layout">
-      0         <div class="filters-overlay" id="filtersOverlay"></div>
+                <div class="filters-overlay" id="filtersOverlay"></div>
                 <aside class="filters" id="sidebar">
                     <div class="filters-head">
                         <strong data-i18n="filterBtn">Filters</strong>
@@ -154,6 +167,7 @@
 
                     <div class="filter-group">
                         <h4 data-i18n="catTitle">Category</h4>
+                        <label class="filter-option highlight-sale-option"><input type="checkbox" class="filter-checkbox" value="on-sale" id="cat-onsale"> <span data-i18n="catOnSale">🔥 On Sale</span></label>
                         <label class="filter-option"><input type="checkbox" class="filter-checkbox" value="kurti" id="cat-kurti"> <span data-i18n="catKurti">Kurti</span></label>
                         <label class="filter-option"><input type="checkbox" class="filter-checkbox" value="three-piece" id="cat-threepiece"> <span data-i18n="catThreePiece">Three Piece</span></label>
                         <label class="filter-option"><input type="checkbox" class="filter-checkbox" value="khadi" id="cat-khadi"> <span data-i18n="catKhadi">Khadi</span></label>
@@ -180,13 +194,22 @@
         <div class="modal-box">
             <button type="button" class="modal-close" id="closeModalBtn" aria-label="Close">&times;</button>
             <div class="modal-gallery">
-                <div class="modal-main-image" id="modalMainImage"></div>
+                <div class="modal-main-image" id="modalMainImage">
+                    <span class="modal-discount-badge" id="modalDiscountBadge" style="display:none;"></span>
+                </div>
                 <div class="modal-thumbs" id="modalThumbnails"></div>
             </div>
             <div class="modal-info">
                 <span class="card-cat" id="modalCategory"></span>
                 <h2 id="modalTitle"></h2>
-                <div class="modal-price" id="modalPrice"></div>
+                
+                <!-- STRIKETHROUGH & SAVINGS PRICE ROW -->
+                <div class="modal-price-wrap" id="modalPriceWrap">
+                    <div class="modal-price" id="modalPrice"></div>
+                    <del class="modal-old-price" id="modalOriginalPrice" style="display:none;"></del>
+                    <span class="modal-savings-tag" id="modalSavingsTag" style="display:none;"></span>
+                </div>
+
                 <p class="modal-desc" id="modalDesc"></p>
 
                 <div class="opt-group" id="colorSection" style="display:none;">
@@ -212,6 +235,13 @@
                     <button type="button" id="modalBuyNowBtn" class="btn btn-brass btn-block modal-buy-btn" data-i18n="buyNow">Buy Now</button>
                 </div>
             </div>
+
+            <!-- RELATED PRODUCTS RECOMMENDATION ENGINE SECTION -->
+            <div class="modal-recommendations-section" id="modalRecommendationsSection">
+                <h3 class="recommendations-title" data-i18n="relatedProductsTitle">You May Also Like</h3>
+                <p class="recommendations-sub" data-i18n="relatedProductsSub">Handpicked matching items from our collection</p>
+                <div id="modalRelatedProducts" class="related-products-grid"></div>
+            </div>
         </div>
     </div>
 
@@ -222,6 +252,12 @@
             <h3 data-i18n="cartTitle">Your Cart</h3>
             <button type="button" class="side-close" id="closeCartBtn" aria-label="Close cart">&times;</button>
         </div>
+
+        <!-- CART TOTAL SAVINGS INDICATOR BANNER -->
+        <div id="cartSavingsBanner" class="cart-savings-banner" style="display:none;">
+            🎉 <span data-i18n="cartSavingsText">You are saving</span> <strong id="cartSavingsAmount">৳ 0</strong> <span data-i18n="cartSavingsOrder">on this order!</span>
+        </div>
+
         <div class="cart-items" id="cartItemsContainer"></div>
         <div class="side-footer">
             <div class="field">
@@ -348,7 +384,7 @@
                     <p data-i18n="footerTagline">Handcrafted luxury fashion, stitched with tradition — from Sylhet to all of Bangladesh.</p>
                     <div class="footer-socials">
                         <a href="https://www.facebook.com/share/1Be3jj7iqb/?mibextid=wwXIfr" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg></a>
-                        <a href="https://www.instagram.com/mohorclothings" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465.66.254 1.216.598 1.772 1.153a4.908 4.908 0 0 1 1.153 1.772c.247.637.415 1.363.465 2.428.047 1.066.06 1.405.06 4.122 0 2.717-.01 3.056-.06 4.122-.05 1.065-.218 1.79-.465 2.428a4.883 4.883 0 0 1-1.153 1.772 4.915 4.915 0 0 1-1.772 1.153c-.637.247-1.363.415-2.428.465-1.066.047-1.405.06-4.122.06-2.717 0-3.056-.01-4.122-.06-1.065-.05-1.79-.218-2.428-.465a4.89 4.89 0 0 1-1.772-1.153 4.904 4.904 0 0 1-1.153-1.772c-.248-.637-.415-1.363-.465-2.428C2.013 15.056 2 14.717 2 12c0-2.717.01-3.056.06-4.122.05-1.066.217-1.79.465-2.428a4.88 4.88 0 0 1 1.153-1.772A4.897 4.897 0 0 1 5.45 2.525c.638-.248 1.362-.415 2.428-.465C8.944 2.013 9.283 2 12 2zm0 1.802c-2.67 0-2.987.01-4.04.059-.976.045-1.505.207-1.858.344-.466.181-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.352-.3.881-.344 1.857-.048 1.053-.058 1.37-.058 4.04 0 2.67.01 2.987.058 4.04.045.976.207 1.505.344 1.858.182.466.399.8.748 1.15.35.35.684.566 1.15.748.353.137.882.3 1.858.344 1.053.048 1.37.058 4.04.058 2.67 0 2.987-.01 4.04-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.684.748-1.15.137-.353-.3-.882.344-1.858.048-1.053.058-1.37.058-4.04 0-2.67-.01-2.987-.058-4.04-.045-.976-.207-1.505-.344-1.857a3.09 3.09 0 0 0-.748-1.15 3.098 3.098 0 0 0-1.15-.748c-.353-.137-.882-.3-1.858-.344-1.053-.048-1.37-.059-4.04-.059zm0 4.595a5.603 5.603 0 1 1 0 11.206 5.603 5.603 0 0 1 0-11.206zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm5.838-9.406a1.31 1.31 0 1 1-2.62 0 1.31 1.31 0 0 1 2.62 0z"/></svg></a>
+                        <a href="https://www.instagram.com/mohorclothings" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465.66.254 1.216.598 1.772 1.153a4.908 4.908 0 0 1 1.153 1.772c.247.637.415 1.363.465 2.428.047 1.066.06 1.405.06 4.122 0 2.717-.01 3.056-.06 4.122-.05 1.065-.218 1.79-.465 2.428a4.883 4.883 0 0 1-1.153 1.772 4.915 4.915 0 0 1-1.772 1.153c-.637.247-1.363.415-2.428.465-1.066.047-1.405.06-4.122.06-2.717 0-3.056-.01-4.122-.06-1.065-.05-1.79-.218-2.428-.465a4.89 4.89 0 0 1-1.772-1.153 4.904 4.904 0 0 1-1.153-1.772c-.248-.637-.415-1.363-.465-2.428C2.013 15.056 2 14.717 2 12c0-2.717.01-3.056.06-4.122.05-1.066.217-1.79.465-2.428a4.88 4.88 0 0 1 1.153-1.772A4.897 4.897 0 0 1 5.45 2.525c.638-.248 1.362-.415 2.428-.465C8.944 2.013 9.283 2 12 2zm0 1.802c-2.67 0-2.987.01-4.04.059-.976.045-1.505.207-1.858.344-.466.181-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.352-.3.881-.344 1.857-.048 1.053-.058 1.37-.058 4.04 0 2.67.01 2.987.058 4.04.045.976.207 1.505.344 1.858.182.466.399.8.748 1.15.35.35.684.566 1.15.748.353.137.882.3 1.858.344 1.053.048 1.37.058 4.04.058 2.67 0 2.987-.01 4.04-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748-.35-.35.566-.684.748-1.15.137-.353-.3-.882.344-1.858.048-1.053.058-1.37.058-4.04 0-2.67-.01-2.987-.058-4.04-.045-.976-.207-1.505-.344-1.857a3.09 3.09 0 0 0-.748-1.15 3.098 3.098 0 0 0-1.15-.748c-.353-.137-.882-.3-1.858-.344-1.053-.048-1.37-.059-4.04-.059zm0 4.595a5.603 5.603 0 1 1 0 11.206 5.603 5.603 0 0 1 0-11.206zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm5.838-9.406a1.31 1.31 0 1 1-2.62 0 1.31 1.31 0 0 1 2.62 0z"/></svg></a>
                     </div>
                 </div>
                 <div class="footer-col">
