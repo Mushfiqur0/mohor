@@ -145,10 +145,21 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
         const custName = o.customerName || o.custName || o.name || 'N/A';
         const custPhone = o.customerPhone || o.custPhone || o.phone || 'N/A';
         const address = o.deliveryAddress || o.address || 'N/A';
-        const deliveryCharge = o.deliveryCharge || (o.deliveryZone === 'inside' ? 80 : (o.deliveryZone === 'outside' ? 150 : 0));
+        const deliveryCharge = o.deliveryFee !== undefined ? o.deliveryFee : (o.deliveryCharge !== undefined ? o.deliveryCharge : (o.deliveryZone === 'inside' ? 80 : (o.deliveryZone === 'outside' ? 130 : 0)));
         const subtotal = o.subtotal || (o.totalAmount ? o.totalAmount - deliveryCharge : 0);
         const total = o.totalAmount || 0;
         const items = o.items || [];
+
+        // Compute or retrieve dynamic order savings
+        let totalSavings = Number(o.totalSavings) || 0;
+        if (!totalSavings && Array.isArray(items)) {
+          totalSavings = items.reduce((sum, it) => {
+            const reg = Number(it.regularPrice) || Number(it.price) || 0;
+            const eff = Number(it.price) || Number(it.salePrice) || reg;
+            const savingsUnit = Math.max(0, reg - eff);
+            return sum + (savingsUnit * (Number(it.qty || it.quantity) || 1));
+          }, 0);
+        }
 
         out.innerHTML = `
           <div class="order-card-detail">
@@ -174,23 +185,39 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
             <!-- Items Purchased -->
             <h4 style="color:#C9A14A; font-size:13px; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Order Items</h4>
             <div style="margin-bottom:20px;">
-              ${items.map(it => `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:#181818; border-radius:6px; margin-bottom:8px; border:1px solid #252525;">
-                  <div>
-                    <strong style="font-size:14px; display:block;">${esc(it.name || it.title || 'Item')}</strong>
-                    <span style="color:#888; font-size:12px;">Size / Variant: ${esc(it.size || it.variant || 'Default')}</span>
+              ${items.map(it => {
+                const qty = Number(it.qty || it.quantity) || 1;
+                const price = Number(it.price || it.salePrice || it.unitPrice) || 0;
+                const regPrice = Number(it.regularPrice) || price;
+                const hasDiscount = regPrice > price;
+                const lineTotal = qty * price;
+                const lineRegTotal = qty * regPrice;
+
+                return `
+                  <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:#181818; border-radius:6px; margin-bottom:8px; border:1px solid #252525;">
+                    <div>
+                      <strong style="font-size:14px; display:block;">${esc(it.name || it.title || 'Item')}</strong>
+                      <span style="color:#888; font-size:12px;">Size / Variant: ${esc(it.size || it.variant || 'Default')}${it.color ? ' &middot; Color: ' + esc(it.color) : ''}</span>
+                    </div>
+                    <div style="text-align:right;">
+                      <span style="font-size:12px; color:#aaa;">
+                        ${hasDiscount ? `<span style="text-decoration:line-through; color:#777; margin-right:4px;">৳${esc(regPrice)}</span>` : ''}
+                        ${esc(qty)} × ৳${esc(price)}
+                      </span>
+                      <strong style="display:block; color:#C9A14A; margin-top:2px;">
+                        ${hasDiscount ? `<span style="text-decoration:line-through; color:#777; font-size:12px; margin-right:6px; font-weight:normal;">৳${esc(lineRegTotal)}</span>` : ''}
+                        ৳${esc(lineTotal)}
+                      </strong>
+                    </div>
                   </div>
-                  <div style="text-align:right;">
-                    <span style="font-size:12px; color:#aaa;">${esc(it.qty || it.quantity || 1)} × ৳${esc(it.price || it.unitPrice || 0)}</span>
-                    <strong style="display:block; color:#C9A14A; margin-top:2px;">৳${esc((it.qty || it.quantity || 1) * (it.price || it.unitPrice || 0))}</strong>
-                  </div>
-                </div>
-              `).join('')}
+                `;
+              }).join('')}
             </div>
 
             <!-- Financial Summary -->
             <div style="background:#181818; padding:16px; border-radius:6px; border:1px solid #252525;">
               <div class="detail-row"><span>Items Subtotal:</span> <span>৳${esc(subtotal)}</span></div>
+              ${totalSavings > 0 ? `<div class="detail-row" style="color:#52c480;"><span>Total Savings:</span> <span>-৳${esc(totalSavings)}</span></div>` : ''}
               <div class="detail-row"><span>Delivery Fee:</span> <span>৳${esc(deliveryCharge)}</span></div>
               <div class="detail-row" style="font-size:18px; font-weight:700; color:#C9A14A; margin-top:6px; padding-top:10px; border-top:1px solid #333;">
                 <span>Grand Total:</span>
