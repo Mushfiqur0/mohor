@@ -39,13 +39,13 @@
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            background: #F5F1EC;
-            border: 1px solid #E7DFD5;
+            background: var(--muslin);
+            border: 1px solid var(--border);
             padding: 8px 16px;
             border-radius: 20px;
             font-family: monospace;
             font-size: 0.95rem;
-            color: #2A211F;
+            color: var(--ink);
             margin: 16px 0 24px;
         }
         .copy-btn-sm {
@@ -63,15 +63,15 @@
             background: #660000;
         }
         .notice-box {
-            background: #FDF8F3;
-            border: 1px dashed #C9A14A;
+            background: var(--card-bg);
+            border: 1px dashed var(--brass);
             border-radius: 8px;
             padding: 20px;
             margin: 24px 0;
             text-align: left;
             font-size: 0.92rem;
             line-height: 1.7;
-            color: #2A211F;
+            color: var(--ink);
         }
         .notice-box a {
             color: #880000;
@@ -79,8 +79,8 @@
             text-decoration: underline;
         }
         .contact-box {
-            background: #FAFAFA;
-            border: 1px solid #E7DFD5;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 24px;
@@ -90,14 +90,14 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            background: #FFFFFF;
-            border: 1px solid #C9A14A;
+            background: var(--surface);
+            border: 1px solid var(--brass);
             padding: 10px 16px;
             border-radius: 6px;
             margin: 12px 0 16px;
             font-weight: 600;
             font-size: 1.15rem;
-            color: #2A211F;
+            color: var(--ink);
         }
         .social-links {
             display: flex;
@@ -140,6 +140,7 @@
             <button type="button" class="lang-btn" id="langToggleBtn" onclick="toggleLanguage()" aria-label="Switch Language">
                 <span id="langLabel">বাংলা / EN</span>
             </button>
+            <button type="button" class="icon-btn" id="themeToggleBtn" aria-label="Toggle theme">🌗</button>
         </nav>
     </header>
 
@@ -152,12 +153,12 @@
             </div>
 
             <!-- Main Heading -->
-            <h1 style="font-family: 'Fraunces', serif; font-size: 1.8rem; margin: 0; color: #2A211F;" data-en="Thank You for Shopping with Us!" data-bn="আমাদের সাথে শপিং করার জন্য আপনাকে ধন্যবাদ!">
+            <h1 style="font-family: 'Fraunces', serif; font-size: 1.8rem; margin: 0; color: var(--ink);" data-en="Thank You for Shopping with Us!" data-bn="আমাদের সাথে শপিং করার জন্য আপনাকে ধন্যবাদ!">
                 Thank You for Shopping with Us!
             </h1>
 
             <!-- Subtitle -->
-            <p style="color: #7C716C; margin-top: 10px; font-size: 0.95rem; line-height: 1.6;" 
+            <p style="color: var(--ink-muted); margin-top: 10px; font-size: 0.95rem; line-height: 1.6;"
                data-en="Your order has been received successfully. Our representative will contact you shortly to confirm delivery details." 
                data-bn="আপনার অর্ডারটি সফলভাবে গ্রহণ করা হয়েছে। দ্রুততম সময়ে ডেলিভারি নিশ্চিত করতে আমাদের প্রতিনিধি আপনার সাথে যোগাযোগ করবেন।">
                 Your order has been received successfully. Our representative will contact you shortly to confirm delivery details.
@@ -171,7 +172,7 @@
 
             <!-- Bilingual Notice Box -->
             <div class="notice-box">
-                <strong style="color: #880000; font-size: 1rem; display: block; margin-bottom: 6px;" data-en="Urgent Notice / জরুরী বার্তা:" data-bn="জরুরী বার্তা:">
+                <strong style="color: var(--maroon); font-size: 1rem; display: block; margin-bottom: 6px;" data-en="Urgent Notice / জরুরী বার্তা:" data-bn="জরুরী বার্তা:">
                     Urgent Notice / জরুরী বার্তা:
                 </strong>
                 
@@ -190,7 +191,7 @@
 
             <!-- Guest Order History Disclaimer Notice Box -->
             <div class="notice-box">
-                <strong style="color: #880000; font-size: 1rem; display: block; margin-bottom: 6px;" data-en="Order History Notice / অর্ডার হিস্ট্রি সম্পর্কিত তথ্য:" data-bn="অর্ডার হিস্ট্রি সম্পর্কিত তথ্য:">
+                <strong style="color: var(--maroon); font-size: 1rem; display: block; margin-bottom: 6px;" data-en="Order History Notice / অর্ডার হিস্ট্রি সম্পর্কিত তথ্য:" data-bn="অর্ডার হিস্ট্রি সম্পর্কিত তথ্য:">
                     Order History Notice / অর্ডার হিস্ট্রি সম্পর্কিত তথ্য:
                 </strong>
                 
@@ -204,7 +205,7 @@
 
             <!-- Contact Box -->
             <div class="contact-box">
-                <span style="font-size: 0.9rem; color: #7C716C;" data-en="For any urgent queries, call or WhatsApp us:" data-bn="যেকোনো প্রয়োজনে কল বা হোয়াটসঅ্যাপ করুন:">
+                <span style="font-size: 0.9rem; color: var(--ink-muted);" data-en="For any urgent queries, call or WhatsApp us:" data-bn="যেকোনো প্রয়োজনে কল বা হোয়াটসঅ্যাপ করুন:">
                     For any urgent queries, call or WhatsApp us:
                 </span>
                 
@@ -214,7 +215,7 @@
                     <button type="button" class="copy-btn-sm" id="copyPhoneBtn" onclick="copyPhone()">COPY</button>
                 </div>
 
-                <span style="font-size: 0.88rem; color: #7C716C; display: block; margin-top: 12px;" data-en="Follow us on social media:" data-bn="আমাদের সোশ্যাল মিডিয়ায় ফলো করুন:">
+                <span style="font-size: 0.88rem; color: var(--ink-muted); display: block; margin-top: 12px;" data-en="Follow us on social media:" data-bn="আমাদের সোশ্যাল মিডিয়ায় ফলো করুন:">
                     Follow us on social media:
                 </span>
                 
@@ -261,6 +262,30 @@
             });
             document.getElementById('langLabel').innerText = currentLang === 'en' ? 'বাংলা / EN' : 'EN / বাংলা';
         }
+
+        function applySuccessTheme(theme) {
+            const resolvedTheme = theme === 'dark' || theme === 'light' ? theme : 'system';
+            if (resolvedTheme === 'system') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.removeItem('mohor_theme');
+            } else {
+                document.documentElement.setAttribute('data-theme', resolvedTheme);
+                localStorage.setItem('mohor_theme', resolvedTheme);
+            }
+            const button = document.getElementById('themeToggleBtn');
+            if (button) button.innerText = resolvedTheme === 'dark' ? '🌙' : resolvedTheme === 'light' ? '☀️' : '🌗';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeButton = document.getElementById('themeToggleBtn');
+            applySuccessTheme(localStorage.getItem('mohor_theme') || 'system');
+            if (themeButton) {
+                themeButton.addEventListener('click', () => {
+                    const current = localStorage.getItem('mohor_theme') || 'system';
+                    applySuccessTheme(current === 'system' ? 'dark' : current === 'dark' ? 'light' : 'system');
+                });
+            }
+        });
 
         function copyOrderId() {
             const orderId = document.getElementById('displayOrderId').innerText;

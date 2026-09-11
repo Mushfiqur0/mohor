@@ -389,10 +389,12 @@ select.input {
 
 :root[data-theme='dark'] .brand-logo .logo-dark { display: none; }
 :root[data-theme='dark'] .brand-logo .logo-light { display: block; }
+:root[data-theme='dark'] .product-nav .brand-logo img { filter: invert(1); }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) .brand-logo .logo-dark { display: none; }
   :root:not([data-theme='light']) .brand-logo .logo-light { display: block; }
+  :root:not([data-theme='light']) .product-nav .brand-logo img { filter: invert(1); }
 }
 
 .lang-btn {
