@@ -113,7 +113,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => { if (typeof updateUIText === 'function') updateUIText(); }, 60);
+            if (typeof updateUIText === 'function') updateUIText();
         });
     </script>
 </body>

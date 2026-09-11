@@ -114,7 +114,7 @@
         // people adjust their order right here on the checkout page too.
         document.addEventListener('DOMContentLoaded', () => {
             window.loadStoreProducts();
-            setTimeout(() => { if (typeof updateUIText === 'function') updateUIText(); }, 60);
+            if (typeof updateUIText === 'function') updateUIText();
         });
     </script>
 </body>

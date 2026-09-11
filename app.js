@@ -12,7 +12,12 @@ if (typeof window.productsData !== 'undefined') {
 }
 
 // --- LANGUAGE STATE ---
-window.currentLang = localStorage.getItem('mohor_lang') || 'en';
+function readStorage(key, fallback) {
+    try { return localStorage.getItem(key) || fallback; }
+    catch (error) { console.warn('Storage is unavailable:', error); return fallback; }
+}
+
+window.currentLang = readStorage('mohor_lang', 'en');
 document.documentElement.lang = window.currentLang;
 
 window.uiTranslations = {
@@ -236,6 +241,11 @@ window.showToast = function(message, type) {
 let _productsLoadPromise = null;
 window.loadStoreProducts = function() {
     if (_productsLoadPromise) return _productsLoadPromise;
+
+    // Render the bundled fallback immediately. Firestore refreshes it in the
+    // background, so a slow network never leaves the storefront blank.
+    if (typeof window.updateProducts === "function") window.updateProducts();
+
     _productsLoadPromise = (async () => {
         if (typeof window.db === 'undefined' || !window.db) return;
         try {

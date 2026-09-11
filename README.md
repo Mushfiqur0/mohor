@@ -56,6 +56,11 @@ in each page's `<head>`/body) for:
 - **Auth** — email/password accounts, used to save a customer's name, phone
   and address for faster repeat checkout, and to show their order history.
 
+The bundled `products.js` catalog is rendered immediately as a resilient
+fallback while Firestore loads in the background. A successful Firestore
+catalog always replaces the fallback; the fallback is not written back to
+Firestore.
+
 The Firebase config object (API key, project ID, etc.) is intentionally
 public in the client code — this is normal for Firebase web apps. Actual
 access control is enforced through **Firestore Security Rules**, configured

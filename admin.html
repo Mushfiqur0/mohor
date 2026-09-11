@@ -59,6 +59,10 @@ body.no-scroll { overflow: hidden; }
 h1, h2, h3 { font-family: var(--font-display); font-weight: 600; margin: 0; color: var(--ink); }
 button, input, select, textarea { font-family: inherit; }
 :focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
@@ -352,7 +356,9 @@ tbody tr:hover { background: rgba(245,241,236,0.6); }
     <span class="login-eyebrow">Admin Panel</span>
     <p class="login-sub">Sign in to manage orders, catalog &amp; stock.</p>
     <form id="login-form">
+      <label class="sr-only" for="login-email">Admin email</label>
       <input type="email" id="login-email" placeholder="Admin email" autocomplete="username" required>
+      <label class="sr-only" for="login-password">Password</label>
       <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" required>
       <button type="submit" class="btn btn-primary btn-block" id="login-btn">Log in</button>
     </form>
@@ -373,7 +379,7 @@ tbody tr:hover { background: rgba(245,241,236,0.6); }
         <div class="wordmark">MOHOR</div>
         <span class="eyebrow">Admin Panel</span>
       </div>
-      <nav>
+      <nav aria-label="Admin sections">
         <button class="nav-item active" data-section="overview" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
           Overview
@@ -444,8 +450,8 @@ tbody tr:hover { background: rgba(245,241,236,0.6); }
               <button class="btn btn-secondary btn-sm" id="export-csv-btn" type="button">Download CSV</button>
             </div>
             <div class="toolbar">
-              <input type="text" id="order-search" placeholder="Search name, phone, or order ID&hellip;">
-              <select id="order-status-filter">
+              <input type="text" id="order-search" aria-label="Search orders" placeholder="Search name, phone, or order ID&hellip;">
+              <select id="order-status-filter" aria-label="Filter orders by status">
                 <option value="All">All statuses</option>
                 <option value="Pending">Pending</option>
                 <option value="Confirmed">Confirmed</option>
@@ -453,7 +459,7 @@ tbody tr:hover { background: rgba(245,241,236,0.6); }
                 <option value="Completed">Completed</option>
                 <option value="Cancelled">Cancelled</option>
               </select>
-              <select id="order-sort">
+              <select id="order-sort" aria-label="Sort orders">
                 <option value="newest">Newest first</option>
                 <option value="oldest">Oldest first</option>
                 <option value="highest">Highest total</option>
@@ -461,6 +467,7 @@ tbody tr:hover { background: rgba(245,241,236,0.6); }
             </div>
             <div class="table-scroll">
               <table>
+                <caption class="sr-only">Customer orders</caption>
                 <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total &amp; Date</th><th>Status</th><th>Action</th></tr></thead>
                 <tbody id="orders-table-body"><tr><td colspan="6" style="text-align:center;color:#888;">Loading orders&hellip;</td></tr></tbody>
               </table>
@@ -477,10 +484,11 @@ tbody tr:hover { background: rgba(245,241,236,0.6); }
               <button class="btn btn-primary btn-sm" id="goto-add-product-btn" type="button">+ New Product</button>
             </div>
             <div class="toolbar">
-              <input type="text" id="product-search" placeholder="Search products by title&hellip;">
+              <input type="text" id="product-search" aria-label="Search products" placeholder="Search products by title&hellip;">
             </div>
             <div class="table-scroll">
               <table>
+                <caption class="sr-only">Live store products</caption>
                 <thead><tr><th>Image</th><th>Title &amp; Price</th><th>Stock</th><th>Sizes</th><th>Action</th></tr></thead>
                 <tbody id="admin-products-table-body"><tr><td colspan="5" style="text-align:center;color:#888;">Loading catalog&hellip;</td></tr></tbody>
               </table>
@@ -501,9 +509,9 @@ tbody tr:hover { background: rgba(245,241,236,0.6); }
                 
                 <!-- UPGRADE: Added English & Bengali dual fields -->
                 <div class="form-group">
-                  <label>Product Title</label>
+                  <label for="prod-title-en">Product Title</label>
                   <input type="text" id="prod-title-en" placeholder="English (e.g. Peach Vila 3-Piece)" required style="margin-bottom:8px;">
-                  <input type="text" id="prod-title-bn" placeholder="Bengali (e.g. পিচ ভিলা থ্রি-পিস)">
+                  <input type="text" id="prod-title-bn" aria-label="Product title in Bengali" placeholder="Bengali (e.g. পিচ ভিলা থ্রি-পিস)">
                 </div>
 
                 <div class="form-group">
@@ -529,37 +537,37 @@ tbody tr:hover { background: rgba(245,241,236,0.6); }
 
                 <!-- UPGRADE: Added English & Bengali dual fields -->
                 <div class="form-group">
-                  <label>Colors (comma separated)</label>
+                  <label for="prod-colors-en">Colors (comma separated)</label>
                   <input type="text" id="prod-colors-en" placeholder="English: Peach Pink, Navy Blue" required style="margin-bottom:8px;">
-                  <input type="text" id="prod-colors-bn" placeholder="Bengali: পিচ পিঙ্ক, নেভি ব্লু">
+                  <input type="text" id="prod-colors-bn" aria-label="Colors in Bengali" placeholder="Bengali: পিচ পিঙ্ক, নেভি ব্লু">
                 </div>
 
                 <div class="form-group full-width">
-                  <label>Sizes &amp; Measurements</label>
-                  <div class="size-blocks-wrap" id="size-blocks-container"></div>
+                  <label id="sizes-label">Sizes &amp; Measurements</label>
+                  <div class="size-blocks-wrap" id="size-blocks-container" role="group" aria-labelledby="sizes-label"></div>
                   <button type="button" class="btn btn-ghost btn-sm" id="add-size-btn" style="align-self:flex-start;">+ Add another size</button>
                   <div class="form-hint">One block per size. List each measurement on its own line.</div>
                 </div>
 
                 <!-- UPGRADE: Added English & Bengali dual fields -->
                 <div class="form-group full-width">
-                  <label>Size Guide (pop-up shown on the storefront)</label>
+                  <label for="prod-measurements-en">Size Guide (pop-up shown on the storefront)</label>
                   <textarea id="prod-measurements-en" rows="3" placeholder="English Size Guide..." style="margin-bottom:8px;"></textarea>
-                  <textarea id="prod-measurements-bn" rows="3" placeholder="Bengali Size Guide..."></textarea>
+                  <textarea id="prod-measurements-bn" aria-label="Size guide in Bengali" rows="3" placeholder="Bengali Size Guide..."></textarea>
                 </div>
 
                 <!-- UPGRADE: Added English & Bengali dual fields -->
                 <div class="form-group full-width">
-                  <label>Main Description</label>
+                  <label for="prod-desc-en">Main Description</label>
                   <textarea id="prod-desc-en" rows="3" placeholder="English Description..." style="margin-bottom:8px;"></textarea>
-                  <textarea id="prod-desc-bn" rows="3" placeholder="Bengali Description..."></textarea>
+                  <textarea id="prod-desc-bn" aria-label="Product description in Bengali" rows="3" placeholder="Bengali Description..."></textarea>
                 </div>
 
                 <!-- UPGRADE: Added English & Bengali dual fields -->
                 <div class="form-group full-width">
-                  <label>Product Details (one point per line)</label>
+                  <label for="prod-details-en">Product Details (one point per line)</label>
                   <textarea id="prod-details-en" rows="4" placeholder="English Details (e.g. Fabric: Cotton)..." style="margin-bottom:8px;"></textarea>
-                  <textarea id="prod-details-bn" rows="4" placeholder="Bengali Details..."></textarea>
+                  <textarea id="prod-details-bn" aria-label="Product details in Bengali" rows="4" placeholder="Bengali Details..."></textarea>
                 </div>
 
                 <div class="form-group full-width">
@@ -586,12 +594,14 @@ tbody tr:hover { background: rgba(245,241,236,0.6); }
             <div class="admin-card-header"><h2>Inventory Alerts</h2></div>
             <div class="threshold-row">
               <span>Flag products at or below</span>
+              <label class="sr-only" for="low-stock-threshold">Low stock threshold in units</label>
               <input type="number" id="low-stock-threshold" value="5" min="0">
               <span>units in stock.</span>
               <span id="inventory-summary"></span>
             </div>
             <div class="table-scroll">
               <table>
+                <caption class="sr-only">Low-stock inventory</caption>
                 <thead><tr><th>Garment</th><th>Sizes</th><th>Stock Left</th></tr></thead>
                 <tbody id="inventory-table-body"><tr><td colspan="3" style="text-align:center;color:#888;padding:20px;">Loading&hellip;</td></tr></tbody>
               </table>
@@ -604,10 +614,10 @@ tbody tr:hover { background: rgba(245,241,236,0.6); }
   </div>
 </div>
 
-<div id="toast-container"></div>
+<div id="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <div class="modal-overlay" id="confirm-modal-overlay">
-  <div class="modal-box">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-message">
     <p id="confirm-modal-message"></p>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="confirm-modal-cancel" type="button">Cancel</button>
@@ -643,6 +653,8 @@ const adminEmail = "mushfiqurrahman2222@gmail.com";
 let allOrders = [];
 let allProducts = [];
 let editingProductId = null;
+let stopOrdersListener = null;
+let stopProductsListener = null;
 
 let orderSearch = '';
 let orderStatusFilter = 'All';
@@ -735,6 +747,17 @@ function showConfirm(message, onConfirm) {
   document.getElementById('confirm-modal-cancel').focus();
 }
 
+function stopDataListeners() {
+  if (stopOrdersListener) {
+    stopOrdersListener();
+    stopOrdersListener = null;
+  }
+  if (stopProductsListener) {
+    stopProductsListener();
+    stopProductsListener = null;
+  }
+}
+
 /* ---------- NAVIGATION ---------- */
 const navItems = document.querySelectorAll('.nav-item');
 const pageSections = document.querySelectorAll('.page-section');
@@ -779,18 +802,21 @@ function showLoginMessage(kind, text) {
 
 onAuthStateChanged(auth, (user) => {
   if (user && user.email === adminEmail) {
+    stopDataListeners();
     loginSection.style.display = 'none';
     mainDashboard.style.display = 'block';
     document.getElementById('user-email').innerText = user.email;
     fetchOrders();
     fetchProducts();
   } else if (user) {
+    stopDataListeners();
     signOut(auth).then(() => {
       loginSection.style.display = 'flex';
       mainDashboard.style.display = 'none';
       showLoginMessage('error', 'Unauthorized. Please log in with the admin email.');
     });
   } else {
+    stopDataListeners();
     loginSection.style.display = 'flex';
     mainDashboard.style.display = 'none';
   }
@@ -828,7 +854,8 @@ logoutBtn.addEventListener('click', () => signOut(auth));
 
 /* ---------- FIRESTORE: ORDERS ---------- */
 function fetchOrders() {
-  onSnapshot(collection(db, "orders"), (snapshot) => {
+  if (stopOrdersListener) stopOrdersListener();
+  stopOrdersListener = onSnapshot(collection(db, "orders"), (snapshot) => {
     allOrders = [];
     snapshot.forEach(d => allOrders.push({ id: d.id, ...d.data() }));
     allOrders.sort((a, b) => new Date(b.orderDate || 0) - new Date(a.orderDate || 0));
@@ -1039,7 +1066,7 @@ function renderRecentOrders() {
   const recent = allOrders.slice(0, 5);
   if (recent.length === 0) { el.innerHTML = `<div class="empty-note">No orders yet.</div>`; return; }
   el.innerHTML = recent.map(o => `
-    <div class="recent-order-row" data-name="${escapeHtml(o.customerName || '')}">
+    <div class="recent-order-row" data-name="${escapeHtml(o.customerName || '')}" role="button" tabindex="0" aria-label="View orders for ${escapeHtml(o.customerName || 'customer')}">
       <div class="recent-order-main">
         <div class="recent-order-name">${escapeHtml(o.customerName || 'N/A')}</div>
         <div class="recent-order-meta">${(o.items || []).length} item(s) &middot; ${timeAgo(o.orderDate)}</div>
@@ -1048,20 +1075,28 @@ function renderRecentOrders() {
       <div class="recent-order-amt">${money(o.totalAmount)}</div>
     </div>`).join('');
   el.querySelectorAll('.recent-order-row').forEach(row => {
-    row.addEventListener('click', () => {
+    const openCustomerOrders = () => {
       const name = row.dataset.name;
       document.getElementById('order-search').value = name;
       orderSearch = name;
       orderPage = 1;
       switchSection('orders');
       renderOrdersTable();
+    };
+    row.addEventListener('click', openCustomerOrders);
+    row.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openCustomerOrders();
+      }
     });
   });
 }
 
 /* ---------- FIRESTORE: PRODUCTS ---------- */
 function fetchProducts() {
-  onSnapshot(collection(db, "products"), (snapshot) => {
+  if (stopProductsListener) stopProductsListener();
+  stopProductsListener = onSnapshot(collection(db, "products"), (snapshot) => {
     allProducts = [];
     snapshot.forEach(d => allProducts.push({ id: d.id, ...d.data() }));
     allProducts.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
@@ -1103,7 +1138,7 @@ function renderProductsTable() {
       
       return `
         <tr>
-          <td>${img ? `<img src="${escapeHtml(img)}" alt="" style="width:44px;height:54px;object-fit:cover;border-radius:6px;">` : '<div style="width:44px;height:54px;background:#F5F1EC;border-radius:6px;"></div>'}</td>
+          <td>${img ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(displayTitle)}" loading="lazy" decoding="async" style="width:44px;height:54px;object-fit:cover;border-radius:6px;">` : '<div aria-hidden="true" style="width:44px;height:54px;background:#F5F1EC;border-radius:6px;"></div>'}</td>
           <td><strong>${escapeHtml(displayTitle)}</strong><br><span class="mono" style="color:#C9A14A;font-weight:600;">${money(prod.price)}</span><br><span style="font-size:11px;color:#a89f9a;text-transform:uppercase;letter-spacing:.3px;">${escapeHtml((prod.category || 'three-piece').replace('-', ' '))}</span></td>
           <td>${stockBadge(prod.quantity)}</td>
           <td style="font-size:12px;color:#665f5b;">${escapeHtml(sizesStr)}</td>
@@ -1173,11 +1208,11 @@ function createSizeBlockHTML(label = '', measurementsTextEn = '', measurementsTe
   return `
     <div class="size-block">
       <div class="size-block-header">
-        <input type="text" class="size-label-input" placeholder="e.g. 38 (M)" value="${escapeHtml(label)}">
-        <button type="button" class="remove-size-btn" title="Remove size">&times;</button>
+        <input type="text" class="size-label-input" aria-label="Size label" placeholder="e.g. 38 (M)" value="${escapeHtml(label)}">
+        <button type="button" class="remove-size-btn" title="Remove size" aria-label="Remove size">&times;</button>
       </div>
-      <textarea class="size-measurements-input en" rows="2" placeholder="EN: Body/Chest: 38&#10;Waist: 34-36">${escapeHtml(measurementsTextEn)}</textarea>
-      <textarea class="size-measurements-input bn" rows="2" placeholder="BN: বডি/চেস্ট: ৩৮&#10;কোমর: ৩৪-৩৬" style="margin-top: 5px;">${escapeHtml(measurementsTextBn)}</textarea>
+      <textarea class="size-measurements-input en" aria-label="Size measurements in English" rows="2" placeholder="EN: Body/Chest: 38&#10;Waist: 34-36">${escapeHtml(measurementsTextEn)}</textarea>
+      <textarea class="size-measurements-input bn" aria-label="Size measurements in Bengali" rows="2" placeholder="BN: বডি/চেস্ট: ৩৮&#10;কোমর: ৩৪-৩৬" style="margin-top: 5px;">${escapeHtml(measurementsTextBn)}</textarea>
     </div>`;
 }
 

@@ -50,7 +50,17 @@ function getCanonicalPrice(item) {
 }
 
 // Load cart from storage so it survives page reloads / mobile navigation.
-window.cart = JSON.parse(localStorage.getItem('mohor_cart') || '[]');
+function loadCart() {
+    try {
+        const stored = JSON.parse(localStorage.getItem('mohor_cart') || '[]');
+        return Array.isArray(stored) ? stored : [];
+    } catch (error) {
+        console.warn('Saved cart could not be read:', error);
+        return [];
+    }
+}
+
+window.cart = loadCart();
 
 const cartOverlay = document.getElementById('cartOverlay');
 const cartSidebar = document.getElementById('cartSidebar');
@@ -145,7 +155,8 @@ window.updateDeliveryPolicyAndTotal = function() {
 };
 
 window.updateCartUI = function() {
-    localStorage.setItem('mohor_cart', JSON.stringify(window.cart));
+    try { localStorage.setItem('mohor_cart', JSON.stringify(window.cart)); }
+    catch (error) { console.warn('Cart could not be saved:', error); }
 
     if (cartItemsContainer) cartItemsContainer.innerHTML = '';
     let subtotal = 0;

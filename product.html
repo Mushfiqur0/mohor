@@ -99,7 +99,6 @@
 
     <!-- Firebase CDN SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script>
         const firebaseConfig = {
@@ -119,7 +118,6 @@
     <script src="products.js?v=18"></script>
     <script src="app.js?v=18"></script>
     <script src="cart.js?v=18"></script>
-    <script type="module" src="auth.js?v=18"></script>
 
     <script>
         let currentSelectedSize = null;
@@ -172,8 +170,12 @@
             const params = new URLSearchParams(window.location.search);
             const targetId = params.get('id');
 
-            await window.loadStoreProducts();
-            const allProducts = (Array.isArray(window.firestoreProducts) && window.firestoreProducts.length > 0)
+            const productsPromise = window.loadStoreProducts();
+            let allProducts = window.productsData || [];
+            activeProduct = allProducts.find(p => String(p.id) === String(targetId));
+
+            if (!activeProduct && productsPromise) await productsPromise;
+            allProducts = (Array.isArray(window.firestoreProducts) && window.firestoreProducts.length > 0)
                 ? window.firestoreProducts
                 : (window.productsData || []);
 
