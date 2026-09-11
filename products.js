@@ -91,8 +91,8 @@ window.renderRelatedProducts = function(currentProduct, targetContainerId = 'rel
     container.innerHTML = items.map(prod => {
         const titleStr = typeof prod.title === 'string' ? prod.title : (prod.title?.[lang] || prod.title?.en || '');
         const images = (prod.images && prod.images.length > 0) ? prod.images : ['assets/image-placeholder.svg'];
-        const regPrice = prod.regularPrice || prod.price;
-        const salePrice = prod.salePrice;
+        const regPrice = prod.originalPrice || prod.regularPrice || prod.price;
+        const salePrice = (prod.price && Number(prod.price) < Number(regPrice)) ? prod.price : (prod.salePrice || null);
         const isSale = salePrice && Number(salePrice) < Number(regPrice);
 
         let priceMarkup = `৳ ${regPrice}`;
@@ -100,22 +100,23 @@ window.renderRelatedProducts = function(currentProduct, targetContainerId = 'rel
 
         if (isSale) {
             const discountPct = Math.round(((regPrice - salePrice) / regPrice) * 100);
-            priceMarkup = `<span class="price-original" style="text-decoration:line-through;color:#888;margin-right:6px;font-size:0.88em;">৳ ${regPrice}</span><span class="price-sale">৳ ${salePrice}</span>`;
-            badgeMarkup = `<span class="sale-badge">-${discountPct}%</span>`;
+            priceMarkup = `<span class="price-original">৳ ${regPrice}</span><span class="price-sale">৳ ${salePrice}</span>`;
+            badgeMarkup = `<span class="sale-badge">-${discountPct}% OFF</span>`;
         }
 
         return `
-            <div class="product-card">
-                <a href="product.html?id=${prod.id}" class="card-img-link">
-                    <div class="card-img-wrap">
+            <div class="product-card" data-id="${prod.id}">
+                <a href="product.html?id=${prod.id}" class="card-img-link" aria-label="${titleStr}">
+                    <div class="card-media">
                         <img src="${images[0]}" alt="${titleStr}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">
                         ${badgeMarkup}
+                        <span class="card-cat">${(prod.category || '').replace('-', ' ')}</span>
                     </div>
                 </a>
-                <div class="card-content">
-                    <span class="card-cat">${(prod.category || '').replace('-', ' ')}</span>
+                <div class="card-body">
                     <h3 class="card-title"><a href="product.html?id=${prod.id}">${titleStr}</a></h3>
                     <div class="card-price">${priceMarkup}</div>
+                    <a href="product.html?id=${prod.id}" class="card-cta">VIEW DETAILS</a>
                 </div>
             </div>
         `;
