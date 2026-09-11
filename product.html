@@ -105,7 +105,7 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
 
     <!-- Related Products Recommendation Engine Section -->
     <section class="related-products-section container">
-        <div class="section-head" style="text-align: left; margin-bottom: 20px;">
+        <div class="section-head section-head-related" style="text-align: left; margin-bottom: 20px;">
             <span class="eyebrow" data-i18n="relatedEyebrow">Recommended</span>
             <h2 style="font-size: 1.5rem; margin-top: 6px;" data-i18n="relatedTitle">You May Also Like</h2>
             <svg class="stitch-rule" viewBox="0 0 72 9" style="margin: 8px 0 0 0;"><line x1="0" y1="4.5" x2="72" y2="4.5"/></svg>
@@ -273,8 +273,8 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
 
             // Render Price with Regular & Sale Price support
             const priceEl = document.getElementById('prodPrice');
-            const regPrice = activeProduct.regularPrice || activeProduct.price;
-            const salePrice = activeProduct.salePrice;
+            const regPrice = activeProduct.originalPrice || activeProduct.regularPrice || activeProduct.price;
+            const salePrice = activeProduct.price < regPrice ? activeProduct.price : (activeProduct.salePrice || null);
             if (salePrice && Number(salePrice) < Number(regPrice)) {
                 const discountPct = Math.round(((regPrice - salePrice) / regPrice) * 100);
                 priceEl.innerHTML = `<span class="price-original">৳ ${regPrice}</span> <span class="price-sale">৳ ${salePrice}</span> <span class="sale-badge">-${discountPct}% OFF</span>`;
