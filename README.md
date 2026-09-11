@@ -30,8 +30,8 @@ products.js     Static fallback product catalog (used only if Firestore is
                 Admin dashboard)
 
 assets/         Logo marks, favicons, hero images, OG image, placeholder art
-banner.png      Original hero photography (source asset)
-favicon.jpeg    Original logo mark (source asset)
+assets/banner-*.webp Responsive hero photography
+assets/favicon-*.png Favicons and app icons
 CNAME           GitHub Pages custom domain (mohor.me)
 _nojekyll       Disables Jekyll processing on GitHub Pages
 ```
@@ -55,11 +55,6 @@ in each page's `<head>`/body) for:
   `admin.html`) and `orders` collection (placed from the storefront).
 - **Auth** — email/password accounts, used to save a customer's name, phone
   and address for faster repeat checkout, and to show their order history.
-
-The bundled `products.js` catalog is rendered immediately as a resilient
-fallback while Firestore loads in the background. A successful Firestore
-catalog always replaces the fallback; the fallback is not written back to
-Firestore.
 
 The Firebase config object (API key, project ID, etc.) is intentionally
 public in the client code — this is normal for Firebase web apps. Actual

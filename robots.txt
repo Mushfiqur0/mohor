@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /assets/
+Allow: /assets/products/
+
+User-agent: Googlebot-Image
+Allow: /
+Allow: /assets/
+Allow: /assets/products/
+
+Sitemap: https://mohor.me/sitemap.xml

@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Details | Mohor Clothings</title>
+    <title>Product Details | Mohor Clothings - Mohor Dress</title>
+
+    <meta name="description" content="Discover handcrafted luxury dresses, Kurtis, and Three-Piece sets at Mohor Clothings Bangladesh. Premium quality women's fashion delivered nationwide.">
+    <meta name="keywords" content="Mohor, Mohor Clothings, Mohor Cloth, Mohor Dress, mohor dress photo, women fashion, Sylhet boutique, dress Bangladesh">
+    <meta property="og:title" content="Product Details | Mohor Clothings - Mohor Dress">
+    <meta property="og:description" content="Explore handcrafted dresses from Mohor Clothings. Delivered across Bangladesh.">
+    <meta property="og:image" content="assets/banner-1920.webp">
+    <meta property="og:type" content="product">
+    <link rel="canonical" href="https://mohor.me/product.html">
 
     <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
@@ -12,7 +20,24 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=21"> 
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '920711640501746');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
 </head>
 <body class="has-fixed-bottom-bar">
 
@@ -23,7 +48,7 @@
                 <span class="hide-mobile" data-i18n="backBtn">Back</span>
             </a>
             <a href="index.html" class="brand-logo" aria-label="Mohor Clothings — Home">
-                <img src="assets/logo-ink.png" alt="Mohor Clothings" width="120" height="36">
+                <img src="assets/logo-ink.png" alt="Mohor Clothings - Mohor Dress Brand Logo" width="120" height="36" loading="lazy" decoding="async">
             </a>
             <div class="nav-actions">
                 <button type="button" id="langToggleBtn" class="lang-btn" aria-label="Switch language">EN<span class="lang-sep">/</span>বাং</button>
@@ -38,7 +63,7 @@
     <div class="product-detail">
         <div class="pd-gallery">
             <div class="pd-gallery-main" id="mainImageWrap">
-                <img id="mainImage" src="" alt="">
+                <img id="mainImage" src="" alt="Mohor Clothings Dress" loading="lazy" decoding="async">
             </div>
             <div class="pd-thumbs" id="thumbnailContainer"></div>
         </div>
@@ -46,6 +71,8 @@
         <div class="pd-info">
             <span class="card-cat" id="prodCategory"></span>
             <h1 id="prodTitle">Loading…</h1>
+            
+            <!-- Enhanced Price Container with Discount Badge Support -->
             <div class="pd-price" id="prodPrice"></div>
 
             <div class="opt-group" id="colorSection" style="display:none;">
@@ -76,6 +103,16 @@
         </div>
     </div>
 
+    <!-- Related Products Recommendation Engine Section -->
+    <section class="related-products-section container">
+        <div class="section-head section-head-related" style="text-align: left; margin-bottom: 20px;">
+            <span class="eyebrow" data-i18n="relatedEyebrow">Recommended</span>
+            <h2 style="font-size: 1.5rem; margin-top: 6px;" data-i18n="relatedTitle">You May Also Like</h2>
+            <svg class="stitch-rule" viewBox="0 0 72 9" style="margin: 8px 0 0 0;"><line x1="0" y1="4.5" x2="72" y2="4.5"/></svg>
+        </div>
+        <div class="related-products-grid product-grid" id="relatedProductsGrid"></div>
+    </section>
+
     <div class="pd-bottom-bar">
         <button type="button" class="btn btn-outline" style="flex:1;" id="addToCartBtnMobile" data-i18n="addToCart">Add to Cart</button>
         <button type="button" class="btn btn-dark" style="flex:1;" id="buyNowBtn" data-i18n="buyNow">Buy Now</button>
@@ -85,7 +122,7 @@
     <div class="lightbox" id="imageModal">
         <button type="button" class="lightbox-close" id="closeModal" aria-label="Close">&times;</button>
         <button type="button" class="lightbox-nav lightbox-prev" id="prevModal" aria-label="Previous image">&#10094;</button>
-        <img id="modalImg" alt="">
+        <img id="modalImg" alt="Mohor Clothings Dress Full Image" loading="lazy" decoding="async">
         <button type="button" class="lightbox-nav lightbox-next" id="nextModal" aria-label="Next image">&#10095;</button>
         <div class="lightbox-actions" id="lightboxActions">
             <button type="button" id="lightboxAddToCart" class="btn btn-brass" data-i18n="addToCart">Add to Cart</button>
@@ -99,6 +136,7 @@
 
     <!-- Firebase CDN SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script>
         const firebaseConfig = {
@@ -118,6 +156,7 @@
     <script src="products.js?v=18"></script>
     <script src="app.js?v=18"></script>
     <script src="cart.js?v=18"></script>
+    <script type="module" src="auth.js?v=18"></script>
 
     <script>
         let currentSelectedSize = null;
@@ -131,10 +170,11 @@
             return field[window.currentLang] || field['en'] || "";
         }
 
-        function setMainImage(src, animate) {
+        function setMainImage(src, altText, animate) {
             const mainImg = document.getElementById('mainImage');
             mainImg.style.animation = 'none';
             mainImg.src = src;
+            if (altText) mainImg.alt = altText;
             if (animate !== false) requestAnimationFrame(() => { mainImg.style.animation = ''; });
         }
 
@@ -170,12 +210,8 @@
             const params = new URLSearchParams(window.location.search);
             const targetId = params.get('id');
 
-            const productsPromise = window.loadStoreProducts();
-            let allProducts = window.productsData || [];
-            activeProduct = allProducts.find(p => String(p.id) === String(targetId));
-
-            if (!activeProduct && productsPromise) await productsPromise;
-            allProducts = (Array.isArray(window.firestoreProducts) && window.firestoreProducts.length > 0)
+            await window.loadStoreProducts();
+            const allProducts = (Array.isArray(window.firestoreProducts) && window.firestoreProducts.length > 0)
                 ? window.firestoreProducts
                 : (window.productsData || []);
 
@@ -187,26 +223,91 @@
                 return;
             }
 
-            document.getElementById('prodPrice').innerText = '৳ ' + activeProduct.price;
+            // SEO & Google Image Indexing Dynamic Enhancements
+            const prodTitleStr = getProductText(activeProduct.title);
+            document.title = `${prodTitleStr} | Mohor Clothings - Mohor Dress`;
+
+            let metaDesc = document.querySelector('meta[name="description"]');
+            if (!metaDesc) { metaDesc = document.createElement('meta'); metaDesc.name = "description"; document.head.appendChild(metaDesc); }
+            metaDesc.content = `${prodTitleStr} by Mohor Clothings. ${getProductText(activeProduct.description).slice(0, 150)}`;
+
+            let ogTitle = document.querySelector('meta[property="og:title"]');
+            if (ogTitle) ogTitle.content = `${prodTitleStr} | Mohor Clothings - Mohor Dress`;
+
+            let ogDesc = document.querySelector('meta[property="og:description"]');
+            if (ogDesc) ogDesc.content = getProductText(activeProduct.description).slice(0, 150);
+
+            const images = (activeProduct.images && activeProduct.images.length > 0) ? activeProduct.images : ['assets/image-placeholder.svg'];
+            let ogImg = document.querySelector('meta[property="og:image"]');
+            if (ogImg && images[0]) ogImg.content = images[0];
+
+            const mainImgEl = document.getElementById('mainImage');
+            const keywordAltText = `${prodTitleStr} - Mohor Clothings Mohor Dress`;
+            if (mainImgEl) mainImgEl.alt = keywordAltText;
+
+            // Dynamic Schema.org Product JSON-LD Metadata Injection
+            const schemaData = {
+                "@context": "https://schema.org/",
+                "@type": "Product",
+                "name": prodTitleStr + " - Mohor Clothings Mohor Dress",
+                "image": images.map(img => img.startsWith('http') ? img : `https://mohor.me/${img}`),
+                "description": getProductText(activeProduct.description) || `${prodTitleStr} - Handcrafted Mohor Dress`,
+                "brand": {
+                    "@type": "Brand",
+                    "name": "Mohor Clothings",
+                    "alternateName": ["Mohor", "Mohor Cloth", "Mohor Dress"]
+                },
+                "offers": {
+                    "@type": "Offer",
+                    "url": window.location.href,
+                    "priceCurrency": "BDT",
+                    "price": activeProduct.salePrice || activeProduct.price,
+                    "availability": "https://schema.org/InStock",
+                    "itemCondition": "https://schema.org/NewCondition"
+                }
+            };
+            const scriptTag = document.createElement('script');
+            scriptTag.type = 'application/ld+json';
+            scriptTag.textContent = JSON.stringify(schemaData);
+            document.head.appendChild(scriptTag);
+
+            // Render Price with Regular & Sale Price support
+            const priceEl = document.getElementById('prodPrice');
+            const regPrice = activeProduct.originalPrice || activeProduct.regularPrice || activeProduct.price;
+            const salePrice = activeProduct.price < regPrice ? activeProduct.price : (activeProduct.salePrice || null);
+            if (salePrice && Number(salePrice) < Number(regPrice)) {
+                const discountPct = Math.round(((regPrice - salePrice) / regPrice) * 100);
+                priceEl.innerHTML = `<span class="price-original">৳ ${regPrice}</span> <span class="price-sale">৳ ${salePrice}</span> <span class="sale-badge">-${discountPct}% OFF</span>`;
+            } else {
+                priceEl.innerText = '৳ ' + regPrice;
+            }
+
             renderDynamicText();
 
             const thumbContainer = document.getElementById('thumbnailContainer');
-            const images = (activeProduct.images && activeProduct.images.length > 0) ? activeProduct.images : ['assets/image-placeholder.svg'];
-            setMainImage(images[0], false);
+            setMainImage(images[0], keywordAltText, false);
 
             images.forEach((imgSrc, index) => {
                 const thumb = document.createElement('div');
                 thumb.className = 'thumbnail' + (index === 0 ? ' active' : '');
-                thumb.innerHTML = `<img src="${imgSrc}" alt="" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">`;
+                const thumbAltText = `${prodTitleStr} - Mohor Dress Image ${index + 1}`;
+                thumb.innerHTML = `<img src="${imgSrc}" alt="${thumbAltText}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">`;
                 thumb.onclick = () => {
                     currentImageIndex = index;
-                    setMainImage(imgSrc);
+                    setMainImage(imgSrc, thumbAltText);
                     thumbContainer.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
                     thumb.classList.add('active');
                 };
                 thumbContainer.appendChild(thumb);
             });
             document.getElementById('mainImage').onerror = function() { this.onerror = null; this.src = 'assets/image-placeholder.svg'; };
+
+            // Render Recommendations
+            if (typeof window.renderRelatedProducts === 'function') {
+                window.renderRelatedProducts(activeProduct, 'relatedProductsGrid');
+            } else if (typeof renderRelatedProducts === 'function') {
+                renderRelatedProducts(activeProduct, 'relatedProductsGrid');
+            }
 
             // Sizes (toggle to unselect)
             const sizeContainer = document.getElementById('sizeOptions');
@@ -276,8 +377,6 @@
                     const warn = document.getElementById('sizeWarning'); if (warn) warn.classList.add('show');
                     valid = false;
                 }
-                // Consistent with the desktop quick-view modal: a color must be
-                // chosen whenever the product actually offers color options.
                 if (colorArray.length > 0 && !currentSelectedColor) {
                     const warn = document.getElementById('colorWarning'); if (warn) warn.classList.add('show');
                     valid = false;
@@ -305,6 +404,7 @@
             document.getElementById('mainImage').onclick = function() {
                 modal.classList.add('active');
                 modalImg.src = images[currentImageIndex];
+                modalImg.alt = `${prodTitleStr} - Mohor Dress Full Image ${currentImageIndex + 1}`;
             };
             document.getElementById('closeModal').onclick = () => modal.classList.remove('active');
             modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
@@ -313,7 +413,9 @@
             function changeImage(direction) {
                 currentImageIndex = (currentImageIndex + direction + images.length) % images.length;
                 modalImg.src = images[currentImageIndex];
-                setMainImage(images[currentImageIndex]);
+                const activeAltText = `${prodTitleStr} - Mohor Dress Image ${currentImageIndex + 1}`;
+                modalImg.alt = activeAltText;
+                setMainImage(images[currentImageIndex], activeAltText);
                 thumbContainer.querySelectorAll('.thumbnail').forEach((t, i) => t.classList.toggle('active', i === currentImageIndex));
             }
             document.getElementById('nextModal').onclick = () => changeImage(1);
@@ -329,7 +431,6 @@
                 if (touchendX > touchstartX + threshold) changeImage(-1);
             });
 
-            // Lightbox action buttons: allow adding to cart or buying from the image modal
             const lbAdd = document.getElementById('lightboxAddToCart');
             const lbBuy = document.getElementById('lightboxBuyNow');
             if (lbAdd) {
