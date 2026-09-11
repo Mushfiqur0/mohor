@@ -30,8 +30,8 @@ products.js     Static fallback product catalog (used only if Firestore is
                 Admin dashboard)
 
 assets/         Logo marks, favicons, hero images, OG image, placeholder art
-banner.png      Original hero photography (source asset)
-favicon.jpeg    Original logo mark (source asset)
+assets/banner-*.webp Responsive hero photography
+assets/favicon-*.png Favicons and app icons
 CNAME           GitHub Pages custom domain (mohor.me)
 _nojekyll       Disables Jekyll processing on GitHub Pages
 ```
