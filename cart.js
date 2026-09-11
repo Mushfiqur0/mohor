@@ -38,12 +38,12 @@ function getCanonicalItemDetails(item) {
         }
     }
 
-    let regularPrice = Number(item.regularPrice || item.price) || 0;
+    let regularPrice = Number(item.regularPrice || item.originalPrice || item.price) || 0;
     let salePrice = item.salePrice !== undefined && item.salePrice !== null ? Number(item.salePrice) : (Number(item.price) || regularPrice);
 
     if (match) {
-        const catalogReg = Number(match.regularPrice || match.price) || 0;
-        const catalogSale = match.salePrice !== undefined && match.salePrice !== null ? Number(match.salePrice) : catalogReg;
+        const catalogReg = Number(match.originalPrice || match.regularPrice || match.price) || 0;
+        const catalogSale = match.salePrice !== undefined && match.salePrice !== null ? Number(match.salePrice) : (match.price < catalogReg ? Number(match.price) : catalogReg);
         regularPrice = catalogReg;
         salePrice = catalogSale;
     }
@@ -103,8 +103,8 @@ window.addToCart = function(product, size, color) {
     const getTextFn = (typeof window.getText === 'function') ? window.getText : (f => typeof f === 'string' ? f : (f?.en || 'Item'));
     const baseTitle = getTextFn(product.title) || 'Item';
     const id = product.id !== undefined ? String(product.id) : null;
-    const regularPrice = Number(product.regularPrice || product.price) || 0;
-    const salePrice = (product.salePrice !== undefined && product.salePrice !== null) ? Number(product.salePrice) : regularPrice;
+    const regularPrice = Number(product.originalPrice || product.regularPrice || product.price) || 0;
+    const salePrice = (product.salePrice !== undefined && product.salePrice !== null) ? Number(product.salePrice) : (product.price < regularPrice ? Number(product.price) : regularPrice);
     const effectivePrice = (salePrice > 0 && salePrice < regularPrice) ? salePrice : regularPrice;
 
     const displayColor = (color && color !== 'Default') ? color : null;
@@ -156,12 +156,12 @@ window.removeFromCart = function(index) {
     window.updateCartUI();
 };
 
-// Outside Sylhet delivery charge updated to 130 TK
+// Outside Sylhet delivery charge updated to 140 TK (Applied once per order)
 function currentDeliveryFee() {
     const zoneSelect = document.getElementById('deliveryZone');
     if (!zoneSelect || !zoneSelect.value || window.cart.length === 0) return 0;
-    if (zoneSelect.value === 'outside' || zoneSelect.value === '130' || zoneSelect.value === '150') return 130;
-    if (zoneSelect.value === 'inside' || zoneSelect.value === '80') return 80;
+    if (zoneSelect.value === 'outside' || zoneSelect.value === '140' || zoneSelect.value === '130' || zoneSelect.value === '150') return 140;
+    if (zoneSelect.value === 'inside' || zoneSelect.value === '70' || zoneSelect.value === '80') return 70;
     return parseInt(zoneSelect.value, 10) || 0;
 }
 
@@ -171,12 +171,12 @@ window.updateDeliveryPolicyAndTotal = function() {
     const tFn = (typeof window.t === 'function') ? window.t : (k => k);
 
     if (zoneSelect && policyDisplay) {
-        if (zoneSelect.value === '80' || zoneSelect.value === 'inside') {
+        if (zoneSelect.value === '70' || zoneSelect.value === '80' || zoneSelect.value === 'inside') {
             policyDisplay.style.display = 'block';
-            policyDisplay.innerHTML = tFn('zoneDeliveryInside') || 'Inside Sylhet City: ৳80';
-        } else if (zoneSelect.value === '130' || zoneSelect.value === '150' || zoneSelect.value === 'outside') {
+            policyDisplay.innerHTML = tFn('zoneDeliveryInside') || 'Inside Sylhet City: ৳70';
+        } else if (zoneSelect.value === '140' || zoneSelect.value === '130' || zoneSelect.value === '150' || zoneSelect.value === 'outside') {
             policyDisplay.style.display = 'block';
-            policyDisplay.innerHTML = tFn('zoneDeliveryOutside') || 'Outside Sylhet: ৳130';
+            policyDisplay.innerHTML = tFn('zoneDeliveryOutside') || 'Outside Sylhet: ৳140';
         } else {
             policyDisplay.style.display = 'none';
         }
@@ -281,9 +281,9 @@ window.updateCartUI = function() {
     const deliveryFee = Number(currentDeliveryFee()) || 0;
     const finalTotal = subtotal + deliveryFee;
 
-    const subEl = document.getElementById('cartSubtotalValue') || document.getElementById('cartSubtotal');
-    const delEl = document.getElementById('cartDeliveryValue') || document.getElementById('cartDelivery');
-    const totEl = document.getElementById('cartTotalValue') || document.getElementById('cartTotal');
+    const subEl = document.getElementById('cartSubtotalValue') || document.getElementById('cartSubtotal') || document.getElementById('subtotalAmount');
+    const delEl = document.getElementById('cartDeliveryValue') || document.getElementById('cartDelivery') || document.getElementById('deliveryFee');
+    const totEl = document.getElementById('cartTotalValue') || document.getElementById('cartTotal') || document.getElementById('grandTotalAmount');
     if (subEl) subEl.innerText = subtotal;
     if (delEl) delEl.innerText = deliveryFee;
     if (totEl) totEl.innerText = finalTotal;
@@ -313,7 +313,7 @@ function validateCheckoutInputs() {
 
     const nameEl = document.getElementById('custName') || document.getElementById('checkoutName');
     const phoneEl = document.getElementById('custPhone') || document.getElementById('checkoutPhone');
-    const addressEl = document.getElementById('deliveryAddress') || document.getElementById('checkoutAddress');
+    const addressEl = document.getElementById('deliveryAddress') || document.getElementById('checkoutAddress') || document.getElementById('custAddress');
     const zoneSelect = document.getElementById('deliveryZone');
     const policyElement = document.getElementById('policyAgree');
 
@@ -376,7 +376,7 @@ function resetCheckoutFormsIfGuest(isGuest) {
     if (isGuest) {
         const nameEl = document.getElementById('custName') || document.getElementById('checkoutName');
         const phoneEl = document.getElementById('custPhone') || document.getElementById('checkoutPhone');
-        const addressEl = document.getElementById('deliveryAddress') || document.getElementById('checkoutAddress');
+        const addressEl = document.getElementById('deliveryAddress') || document.getElementById('checkoutAddress') || document.getElementById('custAddress');
         if (nameEl) nameEl.value = '';
         if (phoneEl) phoneEl.value = '';
         if (addressEl) addressEl.value = '';
@@ -421,7 +421,7 @@ window.checkoutToAdmin = async function() {
     const orderData = validateCheckoutInputs();
     if (!orderData) return;
 
-    const confirmBtn = document.getElementById('adminOrderBtn') || document.getElementById('btnConfirmOrder');
+    const confirmBtn = document.getElementById('adminOrderBtn') || document.getElementById('btnConfirmOrder') || document.querySelector('#checkoutForm button[type="submit"]');
     if (confirmBtn) { confirmBtn.classList.add('is-loading'); confirmBtn.disabled = true; }
 
     try {
@@ -469,20 +469,20 @@ window.checkoutToAdmin = async function() {
             totalSavings: verifiedTotalSavings,
             totalAmount: verifiedTotal,
             items: verifiedItems,
-            // Use serverTimestamp so ordering and timezone are canonical
             orderDate: typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue ? firebase.firestore.FieldValue.serverTimestamp() : new Date().toISOString(),
             status: 'pending'
         };
 
+        let docRef = null;
         if (dbInstance) {
-            await dbInstance.collection('orders').add(newOrder);
+            docRef = await dbInstance.collection('orders').add(newOrder);
         } else {
             throw new Error("Firestore database instance is not available.");
         }
 
         // Trigger instant Telegram notification to the store owner
         if (typeof window.sendTelegramNotification === 'function') {
-            window.sendTelegramNotification(newOrder);
+            window.sendTelegramNotification({ ...newOrder, id: docRef.id });
         }
 
         notify(window.currentLang === 'en' ? 'Order placed successfully! We will contact you soon.' : 'আপনার অর্ডারটি সফলভাবে সম্পন্ন হয়েছে! আমরা শীঘ্রই যোগাযোগ করব।', 'success');
@@ -493,6 +493,9 @@ window.checkoutToAdmin = async function() {
         resetCheckoutFormsIfGuest(!activeUid);
 
         if (activeUid && typeof window.loadUserOrders === 'function') window.loadUserOrders(activeUid);
+
+        // Redirect to order confirmation page
+        window.location.href = `order-success.html?orderId=${docRef.id}`;
     } catch (error) {
         console.error('Error saving order: ', error);
         notify(window.currentLang === 'en' ? 'There was an error placing your order. Please try WhatsApp instead.' : 'অর্ডার প্লেস করতে সমস্যা হয়েছে। অনুগ্রহ করে হোয়াটসঅ্যাপে চেষ্টা করুন।', 'error');
@@ -507,6 +510,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const btnConfirm = document.getElementById('btnConfirmOrder');
     if (btnConfirm) btnConfirm.addEventListener('click', window.checkoutToAdmin);
+
+    const checkoutForm = document.getElementById('checkoutForm');
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            window.checkoutToAdmin();
+        });
+    }
 
     const zoneSelect = document.getElementById('deliveryZone');
     if (zoneSelect) zoneSelect.addEventListener('change', window.updateDeliveryPolicyAndTotal);
