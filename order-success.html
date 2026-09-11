@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmed | Mohor Clothings - Mohor Dress</title>
+    
+    <link rel="stylesheet" href="style.css?v=21">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        .success-wrapper {
+            max-width: 640px;
+            margin: 40px auto 60px;
+            padding: 0 16px;
+        }
+        .success-card {
+            background: var(--surface, #FFFFFF);
+            border: 1px solid var(--border, #E7DFD5);
+            border-radius: 12px;
+            padding: 36px 24px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(42,33,31,0.06);
+        }
+        .success-icon {
+            width: 72px;
+            height: 72px;
+            background: #E7F2EC;
+            color: #2C5C40;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .order-id-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #F5F1EC;
+            border: 1px solid #E7DFD5;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #2A211F;
+            margin: 14px 0 24px;
+        }
+        .copy-btn-sm {
+            background: none;
+            border: none;
+            color: #880000;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .notice-box {
+            background: #FDF8F3;
+            border: 1px dashed #C9A14A;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 24px 0;
+            text-align: left;
+            font-size: 0.92rem;
+            line-height: 1.7;
+            color: #2A211F;
+        }
+        .notice-box a {
+            color: #880000;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+        .contact-box {
+            background: #FAFAFA;
+            border: 1px solid #E7DFD5;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .phone-highlight {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: #FFFFFF;
+            border: 1px solid #C9A14A;
+            padding: 10px 16px;
+            border-radius: 6px;
+            margin: 12px 0 16px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #2A211F;
+        }
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .social-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-decoration: none;
+            color: #FFFFFF;
+        }
+        .btn-fb { background: #1877F2; }
+        .btn-insta { background: #E4405F; }
+    </style>
+</head>
+<body>
+
+    <header class="product-nav">
+        <nav class="nav container">
+            <a href="index.html" class="brand-logo" aria-label="Mohor Clothings — Home">
+                <img src="assets/logo-ink.png" alt="Mohor Clothings Logo" width="120" height="36" decoding="async">
+            </a>
+        </nav>
+    </header>
+
+    <main class="success-wrapper">
+        <div class="success-card">
+            <div class="success-icon">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+
+            <h1 style="font-family: 'Fraunces', serif; font-size: 1.8rem; margin: 0; color: #2A211F;">
+                Thank You for Shopping with Us!
+            </h1>
+            <p style="color: #7C716C; margin-top: 8px; font-size: 0.95rem;">
+                আপনার অর্ডারটি সফলভাবে গ্রহণ করা হয়েছে। দ্রুততম সময়ে ডেলিভারি নিশ্চিত করতে আমাদের প্রতিনিধি আপনার সাথে যোগাযোগ করবেন।
+            </p>
+
+            <div class="order-id-badge">
+                <span>Order ID: <strong id="displayOrderId">Loading…</strong></span>
+                <button type="button" class="copy-btn-sm" id="copyOrderBtn" onclick="copyOrderId()">COPY</button>
+            </div>
+
+            <div class="notice-box">
+                <strong style="color: #880000; font-size: 1rem; display: block; margin-bottom: 6px;">জরুরী বার্তা:</strong>
+                <p style="margin: 0;">
+                    অনুগ্রহ করে ডেলিভারির সময় প্রোডাক্টটি ভালো করে দেখে বুঝে নিন। যেকোনো সমস্যার জন্য ২৪ ঘণ্টার মধ্যে আমাদের জানান, ২৪ ঘণ্টা পর কোনো রিটার্ন গ্রহণযোগ্য হবে না।
+                </p>
+                <p style="margin-top: 10px; font-size: 0.88rem;">
+                    বিস্তারিত তথ্য জানতে আমাদের <a href="policy.html" target="_blank">Return & Exchange Policy</a> পেজটি ভিজিট করুন।
+                </p>
+            </div>
+
+            <div class="contact-box">
+                <span style="font-size: 0.9rem; color: #7C716C;">যেকোনো প্রয়োজনে কল বা হোয়াটসঅ্যাপ করুন:</span>
+                <div class="phone-highlight">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#880000" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    <span id="phoneNum">01330113027</span>
+                    <button type="button" class="copy-btn-sm" id="copyPhoneBtn" onclick="copyPhone()">COPY</button>
+                </div>
+
+                <span style="font-size: 0.88rem; color: #7C716C; display: block; margin-top: 12px;">আমাদের সোশ্যাল মিডিয়ায় ফলো করুন:</span>
+                <div class="social-links">
+                    <a href="https://www.facebook.com/mohor0000" target="_blank" rel="noopener" class="social-btn btn-fb">
+                        Facebook Page
+                    </a>
+                    <a href="https://www.instagram.com/mohorclothings/" target="_blank" rel="noopener" class="social-btn btn-insta">
+                        Instagram
+                    </a>
+                </div>
+            </div>
+
+            <a href="index.html" class="btn btn-dark btn-block" style="text-decoration:none;">
+                Continue Shopping
+            </a>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const orderId = params.get('orderId');
+
+            // SECURITY REDIRECT: Redirect back to catalog if accessed directly without an Order ID
+            if (!orderId || orderId.trim() === '') {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            document.getElementById('displayOrderId').innerText = orderId;
+        });
+
+        function copyOrderId() {
+            const orderId = document.getElementById('displayOrderId').innerText;
+            navigator.clipboard.writeText(orderId).then(() => {
+                const btn = document.getElementById('copyOrderBtn');
+                btn.innerText = 'COPIED!';
+                setTimeout(() => { btn.innerText = 'COPY'; }, 2000);
+            });
+        }
+
+        function copyPhone() {
+            const phone = document.getElementById('phoneNum').innerText;
+            navigator.clipboard.writeText(phone).then(() => {
+                const btn = document.getElementById('copyPhoneBtn');
+                btn.innerText = 'COPIED!';
+                setTimeout(() => { btn.innerText = 'COPY'; }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
