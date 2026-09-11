@@ -20,7 +20,7 @@
   --parchment: #FBF8F3;
   --surface: #FFFFFF;
   --ink: #221B18;               /* Black / Dark text in Light Mode */
-  --ink-muted: #665F5B;        /* Crisp readable muted text */
+  --ink-muted: #665F5B;         /* Crisp readable muted text */
   --ink-faint: #8C847E;
   --border: #E7DFD5;
   --border-strong: #C8BCAC;
@@ -67,8 +67,8 @@
   --muslin: #0b0b0c;
   --parchment: #121214;
   --surface: #17171a;
-  --ink: #f3efe9;              /* White / Light text in Dark Mode */
-  --ink-muted: #cfc9c5;        /* Light gray muted text */
+  --ink: #f3efe9;               /* White / Light text in Dark Mode */
+  --ink-muted: #cfc9c5;         /* Light gray muted text */
   --ink-faint: #9f9a96;
   --border: #26262a;
   --border-strong: #38383e;
@@ -526,7 +526,28 @@ select.input {
 @media (prefers-reduced-motion: reduce) {
   .product-card .card-media img { transition: none; transform: none !important; }
 }
-.product-card .card-cat { position: absolute; top: 12px; left: 12px; background: rgba(251,248,243,0.92); backdrop-filter: blur(4px); font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--maroon-deep); padding: 5px 9px; border-radius: var(--radius-full); z-index: 5; }
+
+/* --- Category Badge (Moved to Top-Right to avoid overlap) --- */
+.product-card .card-cat,
+.product-card .category-badge,
+.product-card .product-category-tag {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  left: auto;
+  background: rgba(251,248,243,0.92);
+  backdrop-filter: blur(4px);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--maroon-deep);
+  padding: 5px 9px;
+  border-radius: var(--radius-full);
+  z-index: 8;
+  box-shadow: var(--shadow-sm);
+}
+
 .product-card .card-body { padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
 .product-card .card-title { font-size: 1rem; font-weight: 600; line-height: 1.32; color: var(--ink); }
 .product-card .card-price { font-family: var(--font-mono); color: var(--brass-deep); font-weight: 600; font-size: 0.95rem; margin-top: auto; }
@@ -537,21 +558,25 @@ select.input {
 }
 .product-card:hover .card-cta { background: var(--ink); color: var(--muslin); border-color: var(--ink); }
 
-/* --- Discount Badges & Strikethrough Pricing --- */
-.sale-badge {
+/* --- Discount Badges (Pinned to Top-Left) & Strikethrough Pricing --- */
+.sale-badge,
+.badge-sale,
+.discount-badge {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 5;
-  background: var(--rust);
+  top: 12px;
+  left: 12px;
+  right: auto;
+  z-index: 10;
+  background: var(--maroon-deep);
   color: #ffffff;
   font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 700;
-  padding: 4px 8px;
+  padding: 5px 9px;
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-sm);
   pointer-events: none;
+  letter-spacing: 0.5px;
 }
 .price-original {
   text-decoration: line-through;
@@ -990,17 +1015,46 @@ select.input {
 
 /* Feature 3 & 4: Related Products Recommendation Engine & Performance Optimizations */
 .related-products-section {
-  margin-top: 56px;
-  padding-top: 40px;
+  width: 100%;
+  margin-top: 60px;
+  padding-top: 48px;
   border-top: 1px solid var(--border);
   content-visibility: auto;
   contain-intrinsic-size: 1px 400px;
 }
+.related-products-section .section-head-related {
+  text-align: left;
+  margin-bottom: 28px;
+}
+.related-products-section h2 {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.related-products-section .section-sub {
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+}
 .related-products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
   margin-top: 24px;
+}
+
+@media (max-width: 992px) {
+  .related-products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 576px) {
+  .related-products-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
 }
 
 @media (max-width: 860px) {
