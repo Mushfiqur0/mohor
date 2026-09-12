@@ -629,15 +629,23 @@ function renderProducts(productsToRender) {
         if (hasMultipleImages && viewMode !== 'list') {
             const dots = card.querySelectorAll('.slider-dot');
             const slides = card.querySelectorAll('.card-slide-img');
+            let activeSlide = 0;
+            const showSlide = (index) => {
+                activeSlide = (index + slides.length) % slides.length;
+                slides.forEach((slide, i) => slide.classList.toggle('active', i === activeSlide));
+                dots.forEach((dot, i) => dot.classList.toggle('active', i === activeSlide));
+            };
             dots.forEach(dot => {
                 dot.addEventListener('click', (ev) => {
                     ev.stopPropagation();
-                    const targetIndex = Number(dot.getAttribute('data-index'));
-                    dots.forEach(d => d.classList.remove('active'));
-                    slides.forEach(s => s.classList.remove('active'));
-                    dot.classList.add('active');
-                    if (slides[targetIndex]) slides[targetIndex].classList.add('active');
+                    showSlide(Number(dot.getAttribute('data-index')));
                 });
+            });
+            let slideTimer = window.setInterval(() => showSlide(activeSlide + 1), 2000);
+            card.addEventListener('mouseenter', () => window.clearInterval(slideTimer));
+            card.addEventListener('mouseleave', () => {
+                window.clearInterval(slideTimer);
+                slideTimer = window.setInterval(() => showSlide(activeSlide + 1), 2000);
             });
         }
 

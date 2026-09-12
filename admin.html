@@ -665,6 +665,8 @@ tbody tr:hover { background: rgba(245,241,236,0.6); }
                   <label>Colors (comma separated)</label>
                   <input type="text" id="prod-colors-en" placeholder="English: Peach Pink, Navy Blue" required style="margin-bottom:8px;">
                   <input type="text" id="prod-colors-bn" placeholder="Bengali: পিচ পিঙ্ক, নেভি ব্লু">
+                  <input type="text" id="prod-colors-hex" placeholder="Optional colour codes in the same order: #E8A39A, #1D3557">
+                  <div class="form-hint">Use one hex code per colour, in the same order as the names. Leave blank when a colour has no swatch.</div>
                 </div>
 
                 <div class="form-group full-width">
@@ -690,6 +692,14 @@ tbody tr:hover { background: rgba(245,241,236,0.6); }
                   <label>Product Details (one point per line)</label>
                   <textarea id="prod-details-en" rows="4" placeholder="English Details (e.g. Fabric: Cotton)..." style="margin-bottom:8px;"></textarea>
                   <textarea id="prod-details-bn" rows="4" placeholder="Bengali Details..."></textarea>
+                </div>
+
+                <div class="form-group full-width">
+                  <label>Materials &amp; Care (optional)</label>
+                  <textarea id="prod-materials-en" rows="2" placeholder="English materials, one point per line..." style="margin-bottom:8px;"></textarea>
+                  <textarea id="prod-materials-bn" rows="2" placeholder="Bengali materials, one point per line..." style="margin-bottom:8px;"></textarea>
+                  <textarea id="prod-care-en" rows="2" placeholder="English care instructions, one point per line..." style="margin-bottom:8px;"></textarea>
+                  <textarea id="prod-care-bn" rows="2" placeholder="Bengali care instructions, one point per line..."></textarea>
                 </div>
 
                 <div class="form-group full-width">
@@ -1499,6 +1509,9 @@ function loadProductIntoForm(id) {
   
   document.getElementById('prod-colors-en').value = getSafeArr(prod.colors, 'en').join(', ');
   document.getElementById('prod-colors-bn').value = getSafeArr(prod.colors, 'bn').join(', ');
+  document.getElementById('prod-colors-hex').value = Array.isArray(prod.colors)
+    ? prod.colors.map(c => typeof c === 'object' ? (c.hex || '') : '').join(', ')
+    : '';
   
   document.getElementById('prod-measurements-en').value = getSafeStr(prod.measurementsGuide, 'en');
   document.getElementById('prod-measurements-bn').value = getSafeStr(prod.measurementsGuide, 'bn');
@@ -1508,6 +1521,10 @@ function loadProductIntoForm(id) {
   
   document.getElementById('prod-details-en').value = getSafeArr(prod.details, 'en').join('\n');
   document.getElementById('prod-details-bn').value = getSafeArr(prod.details, 'bn').join('\n');
+  document.getElementById('prod-materials-en').value = getSafeArr(prod.materials, 'en').join('\n');
+  document.getElementById('prod-materials-bn').value = getSafeArr(prod.materials, 'bn').join('\n');
+  document.getElementById('prod-care-en').value = getSafeArr(prod.care, 'en').join('\n');
+  document.getElementById('prod-care-bn').value = getSafeArr(prod.care, 'bn').join('\n');
   
   document.getElementById('prod-seo').value = Array.isArray(prod.seoKeywords) ? prod.seoKeywords.join(', ') : '';
   document.getElementById('prod-images').value = Array.isArray(prod.images) ? prod.images.join('\n') : '';
@@ -1571,8 +1588,13 @@ addProductForm.addEventListener('submit', async (e) => {
     const originalPrice = Number(document.getElementById('prod-original-price').value) || 0;
     const quantity = Number(document.getElementById('prod-qty').value);
     
-    const colorsEn = document.getElementById('prod-colors-en').value.split(',').map(c => c.trim()).filter(Boolean);
+    const colorNamesEn = document.getElementById('prod-colors-en').value.split(',').map(c => c.trim()).filter(Boolean);
     const colorsBn = document.getElementById('prod-colors-bn').value.split(',').map(c => c.trim()).filter(Boolean);
+    const colorHexes = document.getElementById('prod-colors-hex').value.split(',').map(c => c.trim()).filter(Boolean);
+    const colorsEn = colorNamesEn.map((name, index) => {
+      const bnName = colorsBn[index] || name;
+      return colorHexes[index] ? { name: { en: name, bn: bnName }, hex: colorHexes[index] } : name;
+    });
     const colors = {
       en: colorsEn,
       bn: colorsBn.length > 0 ? colorsBn : colorsEn
@@ -1596,6 +1618,12 @@ addProductForm.addEventListener('submit', async (e) => {
       en: detailsEn,
       bn: detailsBn.length > 0 ? detailsBn : detailsEn
     };
+    const materialsEn = document.getElementById('prod-materials-en').value.split('\n').map(v => v.trim()).filter(Boolean);
+    const materialsBn = document.getElementById('prod-materials-bn').value.split('\n').map(v => v.trim()).filter(Boolean);
+    const careEn = document.getElementById('prod-care-en').value.split('\n').map(v => v.trim()).filter(Boolean);
+    const careBn = document.getElementById('prod-care-bn').value.split('\n').map(v => v.trim()).filter(Boolean);
+    const materials = { en: materialsEn, bn: materialsBn.length ? materialsBn : materialsEn };
+    const care = { en: careEn, bn: careBn.length ? careBn : careEn };
     
     const seoKeywords = document.getElementById('prod-seo').value.split(',').map(k => k.trim()).filter(Boolean);
     const images = document.getElementById('prod-images').value.split('\n').map(u => u.trim()).filter(Boolean);
@@ -1606,7 +1634,7 @@ addProductForm.addEventListener('submit', async (e) => {
     const payload = {
       title, category, price, originalPrice: originalPrice > price ? originalPrice : 0, quantity, colors,
       sizes: sizesArray, sizeMeasurements: sizeMeasurementsMap,
-      measurementsGuide, description: desc, details, seoKeywords, images
+      measurementsGuide, description: desc, details, materials, care, seoKeywords, images
     };
 
     if (isEditing) {
