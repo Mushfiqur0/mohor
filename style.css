@@ -1031,9 +1031,9 @@ select.input {
 
 .pd-gallery-main { aspect-ratio: 4/5; border-radius: var(--radius-md); overflow: hidden; background: var(--muslin); position: relative; box-shadow: var(--shadow-md); }
 .pd-gallery-main img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
-.pd-gallery-main #nextImage { pointer-events: none; }
-.pd-gallery-main img.gallery-slide-in { transform: translateX(100%); opacity: 0; }
-.pd-gallery-main img.gallery-slide-in.gallery-slide-active { transform: translateX(0); opacity: 1; transition: transform 520ms var(--ease), opacity 520ms var(--ease); }
+.pd-gallery-main #nextImage { pointer-events: none; opacity: 0; visibility: hidden; }
+.pd-gallery-main img.gallery-slide-in { transform: translateX(100%); opacity: 0; visibility: visible; }
+.pd-gallery-main img.gallery-slide-in.gallery-slide-active { transform: translateX(0); opacity: 1; visibility: visible; transition: transform 520ms var(--ease), opacity 520ms var(--ease); }
 .pd-gallery-main img.gallery-slide-out { transform: translateX(-100%); opacity: 0; transition: transform 520ms var(--ease), opacity 520ms var(--ease); }
 .gallery-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border: 1px solid rgba(255,255,255,.55); border-radius: 50%; background: rgba(20,15,12,.45); color: #fff; opacity: 0; transition: opacity var(--dur) var(--ease), background var(--dur) var(--ease); }
 .pd-gallery-main:hover .gallery-arrow, .pd-gallery-main:focus-within .gallery-arrow { opacity: 1; }
