@@ -479,11 +479,14 @@ window.updateCartSavingsSummary = function() {
 // call/await this without triggering duplicate reads)
 // ==========================================================================
 let _productsLoadPromise = null;
+window._catalogPending = true;
 window.loadStoreProducts = function() {
     if (_productsLoadPromise) return _productsLoadPromise;
     _productsLoadPromise = (async () => {
-        if (typeof window.db === 'undefined' || !window.db) return;
         try {
+            if (typeof window.db === 'undefined' || !window.db) {
+                return;
+            }
             const querySnapshot = await window.db.collection("products").get();
             const dynamicProducts = [];
             querySnapshot.forEach((doc) => {
@@ -508,6 +511,7 @@ window.loadStoreProducts = function() {
         } catch (err) {
             console.error("Error loading products from database:", err);
         } finally {
+            window._catalogPending = false;
             if (typeof window.updateProducts === "function") window.updateProducts();
             window.dispatchEvent(new CustomEvent('productsLoaded'));
         }
@@ -701,6 +705,11 @@ document.addEventListener('DOMContentLoaded', () => { initViewControls(); });
 function escapeHtml(json) { return String(json).replace(/\\/g,'\\\\').replace(/'/g, "\\'").replace(/\"/g,'\\\"'); }
 
 function updateProducts() {
+    if (window._catalogPending) {
+        renderSkeletonGrid(8);
+        return;
+    }
+
     let sourceData = (Array.isArray(window.firestoreProducts) && window.firestoreProducts.length > 0)
         ? window.firestoreProducts
         : (window.productsData || []);
