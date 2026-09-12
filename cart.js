@@ -232,7 +232,7 @@ window.updateCartUI = function() {
             const csBtn = document.getElementById('continueShoppingBtn');
             if (csBtn) csBtn.addEventListener('click', () => {
                 window.closeCartSidebar();
-                if (!window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') window.location.href = 'index.html';
+                if (!window.location.pathname.endsWith('/') && window.location.pathname !== '/') window.location.href = '/';
             });
         }
     } else {
@@ -495,7 +495,7 @@ window.checkoutToAdmin = async function() {
         if (activeUid && typeof window.loadUserOrders === 'function') window.loadUserOrders(activeUid);
 
         // Redirect to order confirmation page
-        window.location.href = `order-success.html?orderId=${docRef.id}`;
+        window.location.href = `/order-success/?orderId=${docRef.id}`;
     } catch (error) {
         console.error('Error saving order: ', error);
         notify(window.currentLang === 'en' ? 'There was an error placing your order. Please try WhatsApp instead.' : 'অর্ডার প্লেস করতে সমস্যা হয়েছে। অনুগ্রহ করে হোয়াটসঅ্যাপে চেষ্টা করুন।', 'error');

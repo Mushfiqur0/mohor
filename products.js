@@ -106,7 +106,7 @@ window.renderRelatedProducts = function(currentProduct, targetContainerId = 'rel
 
         return `
             <div class="product-card" data-id="${prod.id}">
-                <a href="product.html?id=${prod.id}" class="card-img-link" aria-label="${titleStr}">
+                <a href="/product/?id=${prod.id}" class="card-img-link" aria-label="${titleStr}">
                     <div class="card-media">
                         <img src="${images[0]}" alt="${titleStr}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">
                         ${badgeMarkup}
@@ -114,9 +114,9 @@ window.renderRelatedProducts = function(currentProduct, targetContainerId = 'rel
                     </div>
                 </a>
                 <div class="card-body">
-                    <h3 class="card-title"><a href="product.html?id=${prod.id}">${titleStr}</a></h3>
+                    <h3 class="card-title"><a href="/product/?id=${prod.id}">${titleStr}</a></h3>
                     <div class="card-price">${priceMarkup}</div>
-                    <a href="product.html?id=${prod.id}" class="card-cta">VIEW DETAILS</a>
+                    <a href="/product/?id=${prod.id}" class="card-cta">VIEW DETAILS</a>
                 </div>
             </div>
         `;

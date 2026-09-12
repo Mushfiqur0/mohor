@@ -222,7 +222,7 @@ async function loadUserOrders(uid) {
             <div class="order-history-item" style="background:#141414; border:1px solid #282828; border-radius:8px; padding:18px; margin-bottom:16px;">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
                     <div>
-                        <div style="font-weight:700; font-size:0.95rem;">Order ID: <a href="order.html?id=${esc(r.id)}" style="color:#C9A14A; text-decoration:underline;">${esc(r.id)}</a></div>
+                        <div style="font-weight:700; font-size:0.95rem;">Order ID: <a href="/order/?id=${esc(r.id)}" style="color:#C9A14A; text-decoration:underline;">${esc(r.id)}</a></div>
                         <div style="color:var(--ink-muted, #888); font-size:0.85rem; margin-top:4px;">${esc(r.date)} • ${esc(r.time)}</div>
                         ${r.customerName ? `<div style="font-size:0.85rem; color:#aaa; margin-top:4px;"><strong>Customer:</strong> ${esc(r.customerName)}</div>` : ''}
                         ${r.deliveryAddress ? `<div style="font-size:0.85rem; color:#888; margin-top:2px;"><strong>Address:</strong> ${esc(r.deliveryAddress)}</div>` : ''}
@@ -236,7 +236,7 @@ async function loadUserOrders(uid) {
                 ${r.totalSavings > 0 ? `<div style="font-size:0.82rem; color:#52c480; margin-top:10px; font-weight:600;">🎉 You saved ৳${esc(r.totalSavings)} on this order!</div>` : ''}
 
                 <div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
-                    <a class="btn btn-outline btn-sm" href="order.html?id=${esc(r.id)}" style="text-decoration:none; padding:6px 14px; font-size:12px;">View Details</a>
+                    <a class="btn btn-outline btn-sm" href="/order/?id=${esc(r.id)}" style="text-decoration:none; padding:6px 14px; font-size:12px;">View Details</a>
                     <button type="button" class="btn btn-ghost btn-sm" style="padding:6px 14px; font-size:12px;" onclick="(function(btn){ const items=btn.closest('.order-history-item').querySelector('.order-items'); if(items) items.style.display = (items.style.display === 'none' || !items.style.display) ? 'block' : 'none'; })(this)">Toggle items</button>
                 </div>
 
