@@ -63,8 +63,11 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
 
     <div class="product-detail">
         <div class="pd-gallery">
-            <div class="pd-gallery-main" id="mainImageWrap">
+            <div class="pd-gallery-main" id="mainImageWrap" tabindex="0" aria-label="Product image gallery">
                 <img id="mainImage" src="" alt="Mohor Clothings Dress" loading="lazy" decoding="async">
+                <button type="button" class="gallery-arrow gallery-prev" id="galleryPrev" aria-label="Previous product image">&#10094;</button>
+                <button type="button" class="gallery-arrow gallery-next" id="galleryNext" aria-label="Next product image">&#10095;</button>
+                <span class="gallery-hint">Click to zoom</span>
             </div>
             <div class="pd-thumbs" id="thumbnailContainer"></div>
         </div>
@@ -123,7 +126,14 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
     <div class="lightbox" id="imageModal">
         <button type="button" class="lightbox-close" id="closeModal" aria-label="Close">&times;</button>
         <button type="button" class="lightbox-nav lightbox-prev" id="prevModal" aria-label="Previous image">&#10094;</button>
-        <img id="modalImg" alt="Mohor Clothings Dress Full Image" loading="lazy" decoding="async">
+        <div class="lightbox-zoom-stage" id="lightboxZoomStage">
+            <img id="modalImg" alt="Mohor Clothings Dress Full Image" loading="lazy" decoding="async">
+        </div>
+        <div class="lightbox-zoom-controls" aria-label="Image zoom controls">
+            <button type="button" id="zoomOut" aria-label="Zoom out">−</button>
+            <button type="button" id="zoomReset" aria-label="Reset zoom">Reset</button>
+            <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
+        </div>
         <button type="button" class="lightbox-nav lightbox-next" id="nextModal" aria-label="Next image">&#10095;</button>
         <div class="lightbox-actions" id="lightboxActions">
             <button type="button" id="lightboxAddToCart" class="btn btn-brass" data-i18n="addToCart">Add to Cart</button>
@@ -164,6 +174,8 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
         let currentSelectedColor = null;
         let activeProduct = null;
         let currentImageIndex = 0;
+        let galleryTimer = null;
+        let zoomScale = 1;
 
         function getProductText(field) {
             if (!field) return "";
@@ -177,6 +189,16 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
             mainImg.src = src;
             if (altText) mainImg.alt = altText;
             if (animate !== false) requestAnimationFrame(() => { mainImg.style.animation = ''; });
+        }
+
+        function setGalleryImage(index) {
+            if (!activeProduct) return;
+            const images = (activeProduct.images && activeProduct.images.length > 0) ? activeProduct.images : ['assets/image-placeholder.svg'];
+            currentImageIndex = (index + images.length) % images.length;
+            const altText = `${getProductText(activeProduct.title)} - Mohor Dress Image ${currentImageIndex + 1}`;
+            setMainImage(images[currentImageIndex], altText);
+            const thumbContainer = document.getElementById('thumbnailContainer');
+            if (thumbContainer) thumbContainer.querySelectorAll('.thumbnail').forEach((t, i) => t.classList.toggle('active', i === currentImageIndex));
         }
 
         function renderDynamicText() {
@@ -358,8 +380,13 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
                 colorArray.forEach(color => {
                     const btn = document.createElement('button');
                     btn.type = 'button';
-                    btn.className = 'opt-btn color-btn';
-                    btn.innerText = color;
+                    const colorName = typeof color === 'string' ? color : (color.name || color.label || color.title || '');
+                    const colorValue = typeof color === 'object' ? (color.hex || color.value || color.color || '') : '';
+                    btn.className = 'opt-btn color-btn' + (colorValue ? ' color-swatch-btn' : '');
+                    if (colorValue) btn.style.setProperty('--swatch-color', colorValue);
+                    btn.innerHTML = colorValue
+                        ? `<span class="color-swatch" aria-hidden="true"></span><span>${colorName}</span>`
+                        : colorName;
                     btn.onclick = () => {
                         const warn = document.getElementById('colorWarning');
                         if (btn.classList.contains('selected')) {
@@ -368,7 +395,7 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
                         } else {
                             document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
                             btn.classList.add('selected');
-                            currentSelectedColor = color;
+                            currentSelectedColor = colorName;
                             if (warn) warn.classList.remove('show');
                         }
                     };
@@ -405,11 +432,20 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
             // Lightbox
             const modal = document.getElementById('imageModal');
             const modalImg = document.getElementById('modalImg');
+            const zoomStage = document.getElementById('lightboxZoomStage');
+
+            function updateZoom() {
+                zoomScale = Math.max(1, Math.min(3, zoomScale));
+                modalImg.style.transform = `scale(${zoomScale})`;
+                zoomStage.classList.toggle('is-zoomed', zoomScale > 1);
+            }
+            function resetZoom() { zoomScale = 1; updateZoom(); }
 
             document.getElementById('mainImage').onclick = function() {
                 modal.classList.add('active');
                 modalImg.src = images[currentImageIndex];
                 modalImg.alt = `${prodTitleStr} - Mohor Dress Full Image ${currentImageIndex + 1}`;
+                resetZoom();
             };
             document.getElementById('closeModal').onclick = () => modal.classList.remove('active');
             modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
@@ -418,6 +454,7 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
             function changeImage(direction) {
                 currentImageIndex = (currentImageIndex + direction + images.length) % images.length;
                 modalImg.src = images[currentImageIndex];
+                resetZoom();
                 const activeAltText = `${prodTitleStr} - Mohor Dress Image ${currentImageIndex + 1}`;
                 modalImg.alt = activeAltText;
                 setMainImage(images[currentImageIndex], activeAltText);
@@ -425,6 +462,20 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
             }
             document.getElementById('nextModal').onclick = () => changeImage(1);
             document.getElementById('prevModal').onclick = () => changeImage(-1);
+            document.getElementById('galleryPrev').onclick = (event) => { event.stopPropagation(); setGalleryImage(currentImageIndex - 1); };
+            document.getElementById('galleryNext').onclick = (event) => { event.stopPropagation(); setGalleryImage(currentImageIndex + 1); };
+            document.getElementById('zoomIn').onclick = () => { zoomScale += 0.5; updateZoom(); };
+            document.getElementById('zoomOut').onclick = () => { zoomScale -= 0.5; updateZoom(); };
+            document.getElementById('zoomReset').onclick = resetZoom;
+            zoomStage.addEventListener('wheel', (event) => {
+                event.preventDefault();
+                zoomScale += event.deltaY < 0 ? 0.25 : -0.25;
+                updateZoom();
+            }, { passive: false });
+            zoomStage.addEventListener('dblclick', () => {
+                zoomScale = zoomScale > 1 ? 1 : 2;
+                updateZoom();
+            });
 
             let touchstartX = 0, touchendX = 0;
             modal.addEventListener('touchstart', e => { if (e.touches.length === 1) touchstartX = e.changedTouches[0].screenX; });
@@ -435,6 +486,19 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
                 if (touchendX < touchstartX - threshold) changeImage(1);
                 if (touchendX > touchstartX + threshold) changeImage(-1);
             });
+
+            if (images.length > 1) {
+                galleryTimer = window.setInterval(() => {
+                    if (!modal.classList.contains('active') && !document.hidden) setGalleryImage(currentImageIndex + 1);
+                }, 2000);
+                document.getElementById('mainImageWrap').addEventListener('mouseenter', () => window.clearInterval(galleryTimer));
+                document.getElementById('mainImageWrap').addEventListener('mouseleave', () => {
+                    window.clearInterval(galleryTimer);
+                    galleryTimer = window.setInterval(() => {
+                        if (!modal.classList.contains('active') && !document.hidden) setGalleryImage(currentImageIndex + 1);
+                    }, 2000);
+                });
+            }
 
             const lbAdd = document.getElementById('lightboxAddToCart');
             const lbBuy = document.getElementById('lightboxBuyNow');

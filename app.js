@@ -558,11 +558,7 @@ function renderProducts(productsToRender) {
             // Prevent card modal click if interacting with slider controls
             if (e.target.closest('.card-slider-dots') || e.target.closest('.card-slider-btn')) return;
 
-            if (window.innerWidth <= 900) {
-                window.location.href = `/product/?id=${String(product.id)}`;
-            } else {
-                openProductModal(product);
-            }
+            window.location.href = `/product/?id=${encodeURIComponent(String(product.id))}`;
         };
 
         const displayTitle = getText(product.title);
@@ -650,22 +646,24 @@ function renderProducts(productsToRender) {
         card.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                if (window.innerWidth <= 900) {
-                    window.location.href = `/product/?id=${String(product.id)}`;
-                } else {
-                    openProductModal(product);
-                }
+                window.location.href = `/product/?id=${encodeURIComponent(String(product.id))}`;
             }
         });
 
         // Attach quick view handler for list mode or card-cta for grid
         const quickBtn = card.querySelector('.btn-quickview');
         if (quickBtn) {
-            quickBtn.addEventListener('click', (ev) => { ev.stopPropagation(); if (window.innerWidth <= 900) { window.location.href = `/product/?id=${String(product.id)}`; } else { openProductModal(product); } });
+            quickBtn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                window.location.href = `/product/?id=${encodeURIComponent(String(product.id))}`;
+            });
         }
         const ctaBtn = card.querySelector('.card-cta');
         if (ctaBtn) {
-            ctaBtn.addEventListener('click', (ev) => { ev.stopPropagation(); openProductModal(product); });
+            ctaBtn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                window.location.href = `/product/?id=${encodeURIComponent(String(product.id))}`;
+            });
         }
 
         productGrid.appendChild(card);
