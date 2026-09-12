@@ -1,53 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
-
-  <!-- Storefront Header & Banner -->
   <url>
     <loc>https://mohor.me/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://mohor.me/assets/banner-1920.jpg</image:loc>
-      <image:title>Mohor Clothings Banner — Mohor Dress Collection</image:title>
-      <image:caption>Mohor Clothings handcrafted women dresses, Kurtis, and Khadi fashion in Sylhet, Bangladesh.</image:caption>
+      <image:loc>https://mohor.me/assets/banner-1920.webp</image:loc>
+      <image:title>Mohor Clothings handcrafted fashion collection</image:title>
+      <image:caption>Handcrafted dresses, Kurtis, and Three-Piece fashion from Mohor Clothings in Sylhet, Bangladesh.</image:caption>
     </image:image>
   </url>
-
-  <!-- Static Pages -->
   <url>
-    <loc>https://mohor.me/about.html</loc>
+    <loc>https://mohor.me/about/</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mohor.me/assets/banner-1280.webp</image:loc>
+      <image:title>About Mohor Clothings</image:title>
+    </image:image>
   </url>
   <url>
-    <loc>https://mohor.me/policy.html</loc>
+    <loc>https://mohor.me/policy/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
-
-  <!-- Product 1 -->
   <url>
-    <loc>https://mohor.me/product.html?id=1</loc>
+    <loc>https://mohor.me/product/?id=sample-1</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.7</priority>
     <image:image>
-      <image:loc>https://mohor.me/assets/products/product-1-main.jpg</image:loc>
-      <image:title>Mohor Dress Handcrafted Three-Piece Set — Mohor Clothings</image:title>
-      <image:caption>Premium handcrafted women Mohor dress from Mohor Clothings Sylhet.</image:caption>
+      <image:loc>https://mohor.me/assets/banner-800.webp</image:loc>
+      <image:title>Mohor Three-Piece Dress Collection</image:title>
     </image:image>
   </url>
-
-  <!-- Product 2 (Add for all remaining products) -->
   <url>
-    <loc>https://mohor.me/product.html?id=2</loc>
+    <loc>https://mohor.me/product/?id=sample-2</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.7</priority>
     <image:image>
-      <image:loc>https://mohor.me/assets/products/product-2-main.jpg</image:loc>
-      <image:title>Mohor Kurti Handcrafted Women Dress — Mohor Clothings</image:title>
-      <image:caption>Handcrafted women Kurti dress by Mohor Clothings Bangladesh.</image:caption>
+      <image:loc>https://mohor.me/assets/banner-800.webp</image:loc>
+      <image:title>Mohor Kurti Collection</image:title>
     </image:image>
   </url>
-
 </urlset>

@@ -559,7 +559,7 @@ function renderProducts(productsToRender) {
             if (e.target.closest('.card-slider-dots') || e.target.closest('.card-slider-btn')) return;
 
             if (window.innerWidth <= 900) {
-                window.location.href = `product.html?id=${String(product.id)}`;
+                window.location.href = `/product/?id=${String(product.id)}`;
             } else {
                 openProductModal(product);
             }
@@ -651,7 +651,7 @@ function renderProducts(productsToRender) {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 if (window.innerWidth <= 900) {
-                    window.location.href = `product.html?id=${String(product.id)}`;
+                    window.location.href = `/product/?id=${String(product.id)}`;
                 } else {
                     openProductModal(product);
                 }
@@ -661,7 +661,7 @@ function renderProducts(productsToRender) {
         // Attach quick view handler for list mode or card-cta for grid
         const quickBtn = card.querySelector('.btn-quickview');
         if (quickBtn) {
-            quickBtn.addEventListener('click', (ev) => { ev.stopPropagation(); if (window.innerWidth <= 900) { window.location.href = `product.html?id=${String(product.id)}`; } else { openProductModal(product); } });
+            quickBtn.addEventListener('click', (ev) => { ev.stopPropagation(); if (window.innerWidth <= 900) { window.location.href = `/product/?id=${String(product.id)}`; } else { openProductModal(product); } });
         }
         const ctaBtn = card.querySelector('.card-cta');
         if (ctaBtn) {
@@ -1136,7 +1136,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             closeProductModal();
-            window.location.href = 'cart.html';
+            window.location.href = '/cart/';
         });
     }
 });
@@ -1191,10 +1191,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const topNavCartBtn = document.getElementById('openCartBtn');
     if (topNavCartBtn) {
         topNavCartBtn.addEventListener('click', (e) => {
-            if (window.innerWidth <= 900 && !window.location.pathname.endsWith('cart.html')) {
+            if (window.innerWidth <= 900 && !window.location.pathname.endsWith('/cart/')) {
                 e.preventDefault();
                 e.stopPropagation();
-                window.location.href = 'cart.html';
+                window.location.href = '/cart/';
             }
         }, true);
     }
