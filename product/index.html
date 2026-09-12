@@ -259,12 +259,11 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
             const params = new URLSearchParams(window.location.search);
             const targetId = params.get('id');
 
-            await window.loadStoreProducts();
-            const allProducts = (Array.isArray(window.firestoreProducts) && window.firestoreProducts.length > 0)
-                ? window.firestoreProducts
-                : (window.productsData || []);
-
-            activeProduct = allProducts.find(p => String(p.id) === String(targetId));
+            activeProduct = await window.loadStoreProduct(targetId);
+            if (!activeProduct) {
+                const fallbackProducts = window.productsData || [];
+                activeProduct = fallbackProducts.find(p => String(p.id) === String(targetId));
+            }
 
             if (!activeProduct) {
                 document.getElementById('prodTitle').innerText = 'Product Not Found';

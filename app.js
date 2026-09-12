@@ -480,6 +480,29 @@ window.updateCartSavingsSummary = function() {
 // ==========================================================================
 let _productsLoadPromise = null;
 window._catalogPending = true;
+function normalizeProductSnapshot(doc) {
+    const data = doc.data() || {};
+    return {
+        id: String(doc.id),
+        title: data.title || "Dress",
+        category: data.category || "three-piece",
+        price: Number(data.price || 0),
+        regularPrice: Number(data.regularPrice || data.originalPrice || 0),
+        salePrice: data.salePrice != null ? Number(data.salePrice) : null,
+        originalPrice: data.originalPrice != null ? Number(data.originalPrice) : null,
+        onSale: !!data.onSale,
+        images: Array.isArray(data.images) ? data.images : [],
+        colors: data.colors || [],
+        sizes: Array.isArray(data.sizes) ? data.sizes : [],
+        sizeMeasurements: data.sizeMeasurements || {},
+        measurementsGuide: data.measurementsGuide || "",
+        description: data.description || "",
+        details: data.details || [],
+        materials: data.materials || [],
+        care: data.care || []
+    };
+}
+
 window.loadStoreProducts = function() {
     if (_productsLoadPromise) return _productsLoadPromise;
     _productsLoadPromise = (async () => {
@@ -490,22 +513,7 @@ window.loadStoreProducts = function() {
             const querySnapshot = await window.db.collection("products").get();
             const dynamicProducts = [];
             querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                dynamicProducts.push({
-                    id: doc.id,
-                    title: data.title || "Dress",
-                    category: data.category || "three-piece",
-                    price: Number(data.price || 0),
-                    regularPrice: Number(data.regularPrice || data.originalPrice || 0),
-                    onSale: !!data.onSale,
-                    images: data.images || [],
-                    colors: data.colors || [],
-                    sizes: data.sizes || [],
-                    sizeMeasurements: data.sizeMeasurements || {},
-                    measurementsGuide: data.measurementsGuide || "",
-                    description: data.description || "",
-                    details: data.details || []
-                });
+                dynamicProducts.push(normalizeProductSnapshot(doc));
             });
             if (dynamicProducts.length > 0) window.firestoreProducts = dynamicProducts;
         } catch (err) {
@@ -517,6 +525,27 @@ window.loadStoreProducts = function() {
         }
     })();
     return _productsLoadPromise;
+};
+
+// Product pages can still resolve a product when a collection read is empty
+// or temporarily fails, provided the document itself is readable.
+window.loadStoreProduct = async function(productId) {
+    if (!productId) return null;
+
+    await window.loadStoreProducts();
+    const catalog = Array.isArray(window.firestoreProducts) ? window.firestoreProducts : [];
+    const fromCatalog = catalog.find(product => String(product.id) === String(productId));
+    if (fromCatalog) return fromCatalog;
+
+    if (!window.db || typeof window.db.collection !== "function") return null;
+
+    try {
+        const snapshot = await window.db.collection("products").doc(String(productId)).get();
+        return snapshot.exists ? normalizeProductSnapshot(snapshot) : null;
+    } catch (err) {
+        console.error("Error loading product from database:", err);
+        return null;
+    }
 };
 
 // ==========================================================================
