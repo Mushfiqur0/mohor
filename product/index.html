@@ -105,6 +105,16 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
                 <h5 data-i18n="detailsTitle">The Details</h5>
                 <ul class="details-list" id="prodDetails"></ul>
             </div>
+            <div class="product-accordions">
+                <details id="materialsSection" class="product-accordion">
+                    <summary>Materials</summary>
+                    <ul class="details-list" id="prodMaterials"></ul>
+                </details>
+                <details id="careSection" class="product-accordion">
+                    <summary>Care</summary>
+                    <ul class="details-list" id="prodCare"></ul>
+                </details>
+            </div>
         </div>
     </div>
 
@@ -112,10 +122,14 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
     <section class="related-products-section container">
         <div class="section-head section-head-related" style="text-align: left; margin-bottom: 20px;">
             <span class="eyebrow" data-i18n="relatedEyebrow">Recommended</span>
-            <h2 style="font-size: 1.5rem; margin-top: 6px;" data-i18n="relatedTitle">You May Also Like</h2>
+            <h2 style="font-size: 1.5rem; margin-top: 6px;" data-i18n="relatedTitle">Curated For You</h2>
             <svg class="stitch-rule" viewBox="0 0 72 9" style="margin: 8px 0 0 0;"><line x1="0" y1="4.5" x2="72" y2="4.5"/></svg>
         </div>
-        <div class="related-products-grid product-grid" id="relatedProductsGrid"></div>
+        <div class="related-products-carousel">
+            <button type="button" class="related-arrow related-prev" id="relatedPrev" aria-label="Previous suggested products">&#10094;</button>
+            <div class="related-products-grid product-grid" id="relatedProductsGrid"></div>
+            <button type="button" class="related-arrow related-next" id="relatedNext" aria-label="Next suggested products">&#10095;</button>
+        </div>
     </section>
 
     <div class="pd-bottom-bar">
@@ -220,6 +234,17 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
             } else {
                 detailsSection.style.display = 'none';
             }
+
+            const renderInfoList = (field, sectionId, listId) => {
+                const values = activeProduct[field];
+                const items = Array.isArray(values) ? values : (values?.[window.currentLang] || values?.en || []);
+                const section = document.getElementById(sectionId);
+                const list = document.getElementById(listId);
+                list.innerHTML = items.map(item => `<li>${item}</li>`).join('');
+                section.style.display = items.length ? 'block' : 'none';
+            };
+            renderInfoList('materials', 'materialsSection', 'prodMaterials');
+            renderInfoList('care', 'careSection', 'prodCare');
 
             if (currentSelectedSize && activeProduct.sizeMeasurements && activeProduct.sizeMeasurements[currentSelectedSize]) {
                 const box = document.getElementById('sizeMeasurements');
@@ -336,6 +361,9 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
             } else if (typeof renderRelatedProducts === 'function') {
                 renderRelatedProducts(activeProduct, 'relatedProductsGrid');
             }
+            const relatedGrid = document.getElementById('relatedProductsGrid');
+            document.getElementById('relatedPrev').onclick = () => relatedGrid.scrollBy({ left: -relatedGrid.clientWidth * .8, behavior: 'smooth' });
+            document.getElementById('relatedNext').onclick = () => relatedGrid.scrollBy({ left: relatedGrid.clientWidth * .8, behavior: 'smooth' });
 
             // Sizes (toggle to unselect)
             const sizeContainer = document.getElementById('sizeOptions');
@@ -381,7 +409,10 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
                 colorArray.forEach(color => {
                     const btn = document.createElement('button');
                     btn.type = 'button';
-                    const colorName = typeof color === 'string' ? color : (color.name || color.label || color.title || '');
+                    const rawColorName = typeof color === 'string' ? color : (color.name || color.label || color.title || '');
+                    const colorName = typeof rawColorName === 'string'
+                        ? rawColorName
+                        : (rawColorName[window.currentLang] || rawColorName.en || '');
                     const colorValue = typeof color === 'object' ? (color.hex || color.value || color.color || '') : '';
                     btn.className = 'opt-btn color-btn' + (colorValue ? ' color-swatch-btn' : '');
                     if (colorValue) btn.style.setProperty('--swatch-color', colorValue);
