@@ -20,7 +20,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=21"> 
+    <link rel="stylesheet" href="style.css?v=23">
 <!-- Meta Pixel Code -->
 <script>
 !function(f,b,e,v,n,t,s)
@@ -65,6 +65,7 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
         <div class="pd-gallery">
             <div class="pd-gallery-main" id="mainImageWrap" tabindex="0" aria-label="Product image gallery">
                 <img id="mainImage" src="" alt="Mohor Clothings Dress" loading="lazy" decoding="async">
+                <img id="nextImage" src="" alt="" aria-hidden="true" loading="lazy" decoding="async">
                 <button type="button" class="gallery-arrow gallery-prev" id="galleryPrev" aria-label="Previous product image">&#10094;</button>
                 <button type="button" class="gallery-arrow gallery-next" id="galleryNext" aria-label="Next product image">&#10095;</button>
                 <span class="gallery-hint">Click to zoom</span>
@@ -189,6 +190,7 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
         let activeProduct = null;
         let currentImageIndex = 0;
         let galleryTimer = null;
+        let galleryTransitionTimer = null;
         let zoomScale = 1;
 
         function getProductText(field) {
@@ -199,10 +201,31 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
 
         function setMainImage(src, altText, animate) {
             const mainImg = document.getElementById('mainImage');
-            mainImg.classList.remove('gallery-slide-in');
-            mainImg.src = src;
-            if (altText) mainImg.alt = altText;
-            if (animate !== false) requestAnimationFrame(() => mainImg.classList.add('gallery-slide-in'));
+            const nextImg = document.getElementById('nextImage');
+            if (!nextImg || animate === false || !mainImg.src) {
+                window.clearTimeout(galleryTransitionTimer);
+                mainImg.className = '';
+                if (nextImg) {
+                    nextImg.className = '';
+                    nextImg.src = '';
+                }
+                mainImg.src = src;
+                if (altText) mainImg.alt = altText;
+                return;
+            }
+            window.clearTimeout(galleryTransitionTimer);
+            nextImg.src = src;
+            nextImg.alt = altText || '';
+            nextImg.className = 'gallery-slide-in';
+            mainImg.classList.add('gallery-slide-out');
+            requestAnimationFrame(() => nextImg.classList.add('gallery-slide-active'));
+            galleryTransitionTimer = window.setTimeout(() => {
+                mainImg.src = src;
+                if (altText) mainImg.alt = altText;
+                mainImg.className = '';
+                nextImg.className = '';
+                nextImg.src = '';
+            }, 560);
         }
 
         function setGalleryImage(index) {
@@ -535,13 +558,13 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
             if (images.length > 1) {
                 galleryTimer = window.setInterval(() => {
                     if (!modal.classList.contains('active') && !document.hidden) setGalleryImage(currentImageIndex + 1);
-                }, 3000);
+                }, 5000);
                 document.getElementById('mainImageWrap').addEventListener('mouseenter', () => window.clearInterval(galleryTimer));
                 document.getElementById('mainImageWrap').addEventListener('mouseleave', () => {
                     window.clearInterval(galleryTimer);
                     galleryTimer = window.setInterval(() => {
                         if (!modal.classList.contains('active') && !document.hidden) setGalleryImage(currentImageIndex + 1);
-                    }, 3000);
+                    }, 5000);
                 });
             }
 

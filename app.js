@@ -660,8 +660,14 @@ function renderProducts(productsToRender) {
             const slides = card.querySelectorAll('.card-slide-img');
             let activeSlide = 0;
             const showSlide = (index) => {
-                activeSlide = (index + slides.length) % slides.length;
-                slides.forEach((slide, i) => slide.classList.toggle('active', i === activeSlide));
+                const nextSlide = (index + slides.length) % slides.length;
+                if (nextSlide === activeSlide) return;
+                const previousSlide = slides[activeSlide];
+                activeSlide = nextSlide;
+                previousSlide.classList.remove('active');
+                previousSlide.classList.add('slide-out-left');
+                slides[activeSlide].classList.add('active');
+                window.setTimeout(() => previousSlide.classList.remove('slide-out-left'), 560);
                 dots.forEach((dot, i) => dot.classList.toggle('active', i === activeSlide));
             };
             dots.forEach(dot => {
@@ -670,11 +676,11 @@ function renderProducts(productsToRender) {
                     showSlide(Number(dot.getAttribute('data-index')));
                 });
             });
-            let slideTimer = window.setInterval(() => showSlide(activeSlide + 1), 3000);
+            let slideTimer = window.setInterval(() => showSlide(activeSlide + 1), 5000);
             card.addEventListener('mouseenter', () => window.clearInterval(slideTimer));
             card.addEventListener('mouseleave', () => {
                 window.clearInterval(slideTimer);
-                slideTimer = window.setInterval(() => showSlide(activeSlide + 1), 3000);
+                slideTimer = window.setInterval(() => showSlide(activeSlide + 1), 5000);
             });
         }
 
