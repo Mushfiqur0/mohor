@@ -164,6 +164,10 @@ html[lang="bn"] .section-head .eyebrow {
    ========================================================================== */
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes gallerySlideInRight {
+  from { opacity: .72; transform: translateX(18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
 @keyframes kenBurns { from { transform: scale(1); } to { transform: scale(1.045); } }
 @keyframes shimmer { 0% { background-position: 130% 0; } 100% { background-position: -30% 0; } }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -600,8 +604,23 @@ select.input {
   height: 100%;
   overflow: hidden;
 }
-.card-slider-container .card-slide-img { display: none; width: 100%; height: 100%; object-fit: cover; animation: fadeIn 420ms var(--ease); }
-.card-slider-container .card-slide-img.active { display: block; }
+.card-slider-container .card-slide-img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: translateX(18px);
+  transition: opacity 520ms var(--ease), transform 520ms var(--ease);
+  pointer-events: none;
+}
+.card-slider-container .card-slide-img.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
 .card-slider-container .card-slider-dots, .card-slider-container .slider-dot { display: flex; }
 .card-slider-container .card-slider-dots { position: absolute; bottom: 9px; left: 50%; transform: translateX(-50%); gap: 5px; z-index: 2; }
 .card-slider-container .slider-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.55); }
@@ -1011,7 +1030,8 @@ select.input {
 .product-detail { padding: 42px 5% 120px; max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr); gap: clamp(28px, 5vw, 72px); color: var(--ink); }
 
 .pd-gallery-main { aspect-ratio: 4/5; border-radius: var(--radius-md); overflow: hidden; background: var(--muslin); position: relative; box-shadow: var(--shadow-md); }
-.pd-gallery-main img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; animation: fadeIn 320ms var(--ease); }
+.pd-gallery-main img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+.pd-gallery-main img.gallery-slide-in { animation: gallerySlideInRight 520ms var(--ease); }
 .gallery-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border: 1px solid rgba(255,255,255,.55); border-radius: 50%; background: rgba(20,15,12,.45); color: #fff; opacity: 0; transition: opacity var(--dur) var(--ease), background var(--dur) var(--ease); }
 .pd-gallery-main:hover .gallery-arrow, .pd-gallery-main:focus-within .gallery-arrow { opacity: 1; }
 .gallery-arrow:hover { background: rgba(20,15,12,.75); }
