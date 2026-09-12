@@ -179,8 +179,8 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
         window.db = firebase.firestore();
     </script>
 
-    <script src="products.js?v=18"></script>
-    <script src="app.js?v=18"></script>
+    <script src="products.js?v=22"></script>
+    <script src="app.js?v=22"></script>
     <script src="cart.js?v=18"></script>
     <script type="module" src="auth.js?v=18"></script>
 
@@ -200,10 +200,10 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
 
         function setMainImage(src, altText, animate) {
             const mainImg = document.getElementById('mainImage');
-            mainImg.style.animation = 'none';
+            mainImg.classList.remove('gallery-slide-in');
             mainImg.src = src;
             if (altText) mainImg.alt = altText;
-            if (animate !== false) requestAnimationFrame(() => { mainImg.style.animation = ''; });
+            if (animate !== false) requestAnimationFrame(() => mainImg.classList.add('gallery-slide-in'));
         }
 
         function setGalleryImage(index) {
@@ -254,6 +254,21 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
         }
 
         window.addEventListener('languageChanged', renderDynamicText);
+
+        if (typeof window.loadStoreProduct !== 'function') {
+            window.loadStoreProduct = async function(productId) {
+                if (!productId || !window.db || typeof window.db.collection !== 'function') return null;
+                try {
+                    const snapshot = await window.db.collection('products').doc(String(productId)).get();
+                    if (!snapshot.exists) return null;
+                    const data = snapshot.data() || {};
+                    return { id: String(snapshot.id), ...data };
+                } catch (error) {
+                    console.error('Error loading product:', error);
+                    return null;
+                }
+            };
+        }
 
         document.addEventListener('DOMContentLoaded', async () => {
             const params = new URLSearchParams(window.location.search);
@@ -521,13 +536,13 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
             if (images.length > 1) {
                 galleryTimer = window.setInterval(() => {
                     if (!modal.classList.contains('active') && !document.hidden) setGalleryImage(currentImageIndex + 1);
-                }, 2000);
+                }, 3000);
                 document.getElementById('mainImageWrap').addEventListener('mouseenter', () => window.clearInterval(galleryTimer));
                 document.getElementById('mainImageWrap').addEventListener('mouseleave', () => {
                     window.clearInterval(galleryTimer);
                     galleryTimer = window.setInterval(() => {
                         if (!modal.classList.contains('active') && !document.hidden) setGalleryImage(currentImageIndex + 1);
-                    }, 2000);
+                    }, 3000);
                 });
             }
 

@@ -670,11 +670,11 @@ function renderProducts(productsToRender) {
                     showSlide(Number(dot.getAttribute('data-index')));
                 });
             });
-            let slideTimer = window.setInterval(() => showSlide(activeSlide + 1), 2000);
+            let slideTimer = window.setInterval(() => showSlide(activeSlide + 1), 3000);
             card.addEventListener('mouseenter', () => window.clearInterval(slideTimer));
             card.addEventListener('mouseleave', () => {
                 window.clearInterval(slideTimer);
-                slideTimer = window.setInterval(() => showSlide(activeSlide + 1), 2000);
+                slideTimer = window.setInterval(() => showSlide(activeSlide + 1), 3000);
             });
         }
 
