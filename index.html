@@ -415,7 +415,6 @@
 
     <!-- Firebase CDN SDKs -->
     <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -439,9 +438,36 @@
     <script defer src="products.js?v=20"></script>
     <script defer src="app.js?v=20"></script>
     <script defer src="cart.js?v=20"></script>
-    <script defer type="module" src="auth.js?v=20"></script>
 
     <script>
+        // Authentication is not needed to browse the catalog. Load it only
+        // when the account drawer is actually opened.
+        (() => {
+            let authPromise;
+            const loadScript = (src, type) => new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                if (type) script.type = type;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+            const loadAuth = () => {
+                if (!authPromise) {
+                    authPromise = loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js')
+                        .then(() => loadScript('auth.js?v=20', 'module'));
+                }
+                return authPromise;
+            };
+            document.addEventListener('click', (event) => {
+                if (event.target.closest('#openAccountBtn, .open-account-btn')) {
+                    loadAuth().then(() => {
+                        if (typeof window.openAccountSidebar === 'function') window.openAccountSidebar();
+                    }).catch((error) => console.error('Unable to load account tools:', error));
+                }
+            }, {capture: true});
+        })();
+
         document.addEventListener('DOMContentLoaded', () => {
             if (typeof window.loadStoreProducts === 'function') {
                 window.loadStoreProducts().then(() => {
@@ -479,18 +505,26 @@
         });
     </script>
 
-    <!-- Meta Pixel Code (Deferred to Non-Blocking Execution) -->
+    <!-- Meta Pixel Code (loaded after the first render) -->
     <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '920711640501746');
-    fbq('track', 'PageView');
+    const loadMetaPixel = () => {
+        if (window.fbq) return;
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '920711640501746');
+        fbq('track', 'PageView');
+    };
+    if ('requestIdleCallback' in window) {
+        requestIdleCallback(loadMetaPixel, { timeout: 3000 });
+    } else {
+        window.setTimeout(loadMetaPixel, 2000);
+    }
     </script>
     <noscript><img height="1" width="1" style="display:none"
     src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
