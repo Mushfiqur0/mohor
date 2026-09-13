@@ -557,16 +557,21 @@ select.input {
 .product-card .card-title a:hover { color: var(--brass-deep); }
 .product-card .card-price { font-family: var(--font-mono); color: var(--brass-deep); font-weight: 600; font-size: 0.95rem; margin-top: auto; }
 .card-colors { display: flex; align-items: center; gap: 6px; min-height: 19px; margin-top: 1px; }
+.card-color-option { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-muted); font-size: 0.68rem; }
 .card-color-swatch {
   width: 14px; height: 14px; border-radius: 50%; background: var(--swatch-color);
   border: 1px solid rgba(34, 27, 24, 0.2); box-shadow: inset 0 0 0 2px rgba(255,255,255,.38);
 }
 .card-color-more { color: var(--ink-faint); font-size: 0.7rem; font-family: var(--font-mono); }
+.card-discount { color: var(--rust); font-size: 0.72rem; font-weight: 700; margin-left: 2px; }
 .product-card .card-cta {
   align-self: flex-start; margin-top: 7px; background: transparent; border: 1px solid var(--border-strong); color: var(--ink);
-  padding: 8px 12px; font-size: 0.66rem; font-weight: 600; letter-spacing: 1.1px; text-transform: uppercase; border-radius: var(--radius-full);
+  padding: 7px 12px; font-size: 0.66rem; font-weight: 600; letter-spacing: 1.1px; text-transform: uppercase; border-radius: var(--radius-full);
   transition: background var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
+.product-card .card-cta, .btn-quickview { display: inline-flex; align-items: center; gap: 6px; }
+.quick-view-icon { display: inline-flex; width: 15px; height: 15px; }
+.quick-view-icon svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .product-card:hover .card-cta { background: var(--ink); color: var(--muslin); border-color: var(--ink); }
 
 /* --- Discount Badges (Pinned to Top-Left) & Strikethrough Pricing --- */
@@ -779,6 +784,8 @@ select.input {
 .modal-info .modal-add-btn { position: sticky; bottom: 12px; z-index: 10; }
 .modal-info .card-cat { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--brass-deep); }
 .modal-info h2, #modalTitle, .modal-title, .product-details h2 { font-size: 1.5rem; margin: 8px 0 10px; color: var(--ink) !important; }
+.quick-view-box #modalCategory { display: none; }
+.modal-color-summary { color: var(--ink-muted); font-size: 0.8rem; margin: -3px 0 12px; }
 .modal-info .modal-price { font-family: var(--font-mono); color: var(--brass-deep); font-weight: 600; font-size: 1.2rem; margin-bottom: 16px; }
 .modal-info .modal-desc { color: var(--ink-muted); font-size: 0.88rem; line-height: 1.75; margin-bottom: 18px; }
 
@@ -815,9 +822,11 @@ select.input {
 .quick-view-box .modal-desc,
 .quick-view-box #modalDetailsSection,
 .quick-view-box .modal-recommendations-section,
-.quick-view-box .modal-thumbs { display: none; }
+.quick-view-box .modal-thumbs { display: flex; }
 .quick-view-box .modal-gallery { min-height: 360px; }
-.quick-view-box .modal-main-image { height: 100%; min-height: 360px; aspect-ratio: auto; }
+.quick-view-box .modal-main-image { height: 100%; min-height: 360px; aspect-ratio: auto; touch-action: pan-y; cursor: grab; }
+.quick-view-box .modal-main-image:active { cursor: grabbing; }
+.quick-view-box .modal-thumbs { padding: 10px 12px 12px; }
 .quick-view-box .modal-info { display: flex; flex-direction: column; justify-content: center; }
 .quick-view-box .modal-info h2 { font-size: clamp(1.35rem, 2.2vw, 1.8rem); margin-bottom: 12px; }
 .quick-view-box .modal-price-wrap { margin-bottom: 18px; }
