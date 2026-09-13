@@ -639,7 +639,7 @@ function renderProducts(productsToRender) {
     }
 
     productGrid.classList.add('reveal-stagger');
-    productsToRender.forEach(product => {
+    productsToRender.forEach((product, productIndex) => {
         const card = document.createElement('div');
         card.className = 'product-card';
 
@@ -667,7 +667,7 @@ function renderProducts(productsToRender) {
         if (hasMultipleImages && viewMode !== 'list') {
             const dotsHtml = images.map((_, idx) => `<span class="slider-dot ${idx === 0 ? 'active' : ''}" data-index="${idx}"></span>`).join('');
             const slidesHtml = images.map((imgSrc, idx) => `
-                <img src="${imgSrc}" class="card-slide-img ${idx === 0 ? 'active' : ''}" alt="${displayTitle} - Mohor Clothings Mohor Dress Image ${idx + 1}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">
+                <img src="${imgSrc}" class="card-slide-img ${idx === 0 ? 'active' : ''}" alt="${displayTitle} - Mohor Clothings Mohor Dress Image ${idx + 1}" loading="${productIndex === 0 && idx === 0 ? 'eager' : 'lazy'}" ${productIndex === 0 && idx === 0 ? 'fetchpriority="high"' : ''} decoding="async" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">
             `).join('');
 
             mediaContentHtml = `
@@ -677,7 +677,7 @@ function renderProducts(productsToRender) {
                 </div>
             `;
         } else {
-            mediaContentHtml = `<img src="${productCoverImage(product)}" alt="${displayTitle} - Mohor Clothings Mohor Dress" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">`;
+            mediaContentHtml = `<img src="${productCoverImage(product)}" alt="${displayTitle} - Mohor Clothings Mohor Dress" loading="${productIndex < 2 ? 'eager' : 'lazy'}" ${productIndex === 0 ? 'fetchpriority="high"' : ''} decoding="async" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">`;
         }
 
         if (viewMode === 'list') {
