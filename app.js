@@ -579,7 +579,7 @@ function colorSwatchesHtml(product) {
         colors.slice(0, 6).map(color => {
             const label = String(color);
             const swatch = colorMap[label.toLowerCase()] || '#c9a14a';
-            return `<span class="card-color-swatch" style="--swatch-color:${swatch}" title="${label}" aria-label="${label}"></span>`;
+            return `<span class="card-color-option"><span class="card-color-swatch" style="--swatch-color:${swatch}" aria-hidden="true"></span><span>${label}</span></span>`;
         }).join('') +
         (colors.length > 6 ? `<span class="card-color-more">+${colors.length - 6}</span>` : '') +
         `</div>`;
@@ -630,7 +630,7 @@ function renderProducts(productsToRender) {
 
         // FEATURE 1: Strikethrough Pricing HTML
         const priceDisplayHtml = pricing.isOnSale
-            ? `<div class="card-price"><span class="sale-price">৳ ${pricing.price}</span> <del class="old-price">৳ ${pricing.regularPrice}</del></div>`
+            ? `<div class="card-price"><span class="sale-price">৳ ${pricing.price}</span> <del class="old-price">৳ ${pricing.regularPrice}</del> <span class="card-discount">-${pricing.discountPercent}%</span></div>`
             : `<div class="card-price">৳ ${pricing.price}</div>`;
 
         // FEATURE 2: In-Card Image Slideshow HTML
@@ -662,7 +662,7 @@ function renderProducts(productsToRender) {
                     ${priceDisplayHtml}
                     ${colorOptionsHtml}
                     <div class="card-desc">${(getText(product.description) || '').slice(0,140)}</div>
-                    <div style="margin-top:10px;"><button type="button" class="btn btn-outline btn-quickview">${t('quickView')}</button></div>
+                    <div style="margin-top:10px;"><button type="button" class="btn btn-outline btn-quickview"><span class="quick-view-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></span><span>${t('quickView')}</span></button></div>
                 </div>
             `;
         } else {
@@ -676,7 +676,7 @@ function renderProducts(productsToRender) {
                     <div class="card-title"><a href="${productUrl}">${displayTitle}</a></div>
                     ${priceDisplayHtml}
                     ${colorOptionsHtml}
-                    <button type="button" class="card-cta">${t('quickView')}</button>
+                    <button type="button" class="card-cta"><span class="quick-view-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></span><span>${t('quickView')}</span></button>
                 </div>
             `;
         }
@@ -699,6 +699,7 @@ function renderProducts(productsToRender) {
             };
             dots.forEach(dot => {
                 dot.addEventListener('click', (ev) => {
+                    ev.preventDefault();
                     ev.stopPropagation();
                     showSlide(Number(dot.getAttribute('data-index')));
                 });
@@ -908,6 +909,7 @@ function renderRelatedProducts(currentProduct) {
 let currentViewingProduct = null;
 let selectedSize = null;
 let selectedColor = null;
+let currentModalImageIndex = 0;
 let _lastFocusedElement = null;
 
 function trapFocus(container) {
@@ -978,6 +980,16 @@ function openProductModal(product) {
     // FEATURE 1: Modal Price & Badges
     document.getElementById('modalTitle').innerText = getText(product.title);
     document.getElementById('modalPrice').innerText = `৳ ${pricing.price}`;
+    const modalColorSummary = document.getElementById('modalColorSummary');
+    if (modalColorSummary) {
+        let summaryColors = product.colors;
+        if (!Array.isArray(summaryColors) && summaryColors && typeof summaryColors === 'object') {
+            summaryColors = summaryColors[window.currentLang] || summaryColors.en || [];
+        }
+        modalColorSummary.textContent = Array.isArray(summaryColors) && summaryColors.length
+            ? `${window.currentLang === 'bn' ? 'রং' : 'Color'}: ${summaryColors.join(', ')}`
+            : '';
+    }
 
     const origPriceEl = document.getElementById('modalOriginalPrice');
     const savingsTagEl = document.getElementById('modalSavingsTag');
@@ -985,7 +997,7 @@ function openProductModal(product) {
 
     if (pricing.isOnSale) {
         if (origPriceEl) { origPriceEl.innerText = `৳ ${pricing.regularPrice}`; origPriceEl.style.display = 'inline-block'; }
-        if (savingsTagEl) { savingsTagEl.innerText = `Save ৳ ${pricing.savingsAmt}`; savingsTagEl.style.display = 'inline-block'; }
+        if (savingsTagEl) { savingsTagEl.innerText = `-${pricing.discountPercent}% OFF`; savingsTagEl.style.display = 'inline-block'; }
         if (discountBadgeEl) { discountBadgeEl.innerText = `-${pricing.discountPercent}% OFF`; discountBadgeEl.style.display = 'inline-block'; }
     } else {
         if (origPriceEl) origPriceEl.style.display = 'none';
@@ -1002,25 +1014,18 @@ function openProductModal(product) {
     thumbContainer.innerHTML = '';
 
     const images = (product.images && product.images.length > 0) ? product.images : ['assets/image-placeholder.svg'];
-    mainImage.innerHTML = `
-        ${pricing.isOnSale ? `<span class="modal-discount-badge">-${pricing.discountPercent}% OFF</span>` : ''}
-        <img src="${images[0]}" alt="${getText(product.title)} - Mohor Clothings Mohor Dress" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">
-    `;
+    currentModalImageIndex = 0;
 
     images.forEach((imgSrc, index) => {
         const thumb = document.createElement('div');
         thumb.className = 'thumbnail' + (index === 0 ? ' active' : '');
         thumb.innerHTML = `<img src="${imgSrc}" alt="${getText(product.title)} Mohor Dress - Image ${index + 1}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">`;
         thumb.onclick = () => {
-            mainImage.innerHTML = `
-                ${pricing.isOnSale ? `<span class="modal-discount-badge">-${pricing.discountPercent}% OFF</span>` : ''}
-                <img src="${imgSrc}" alt="${getText(product.title)} - Mohor Clothings Mohor Dress" loading="lazy" decoding="async">
-            `;
-            thumbContainer.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
-            thumb.classList.add('active');
+            setModalImage(index);
         };
         thumbContainer.appendChild(thumb);
     });
+    setModalImage(0);
 
     const colorsContainer = document.getElementById('modalColors');
     const colorSection = document.getElementById('colorSection');
@@ -1066,6 +1071,24 @@ function openProductModal(product) {
     if (preferFocus) preferFocus.focus();
 }
 window.openProductModal = openProductModal;
+
+function setModalImage(index) {
+    if (!currentViewingProduct) return;
+    const images = (currentViewingProduct.images && currentViewingProduct.images.length > 0)
+        ? currentViewingProduct.images : ['assets/image-placeholder.svg'];
+    currentModalImageIndex = (index + images.length) % images.length;
+    const pricing = window.getProductPricing(currentViewingProduct);
+    const title = getText(currentViewingProduct.title);
+    const mainImage = document.getElementById('modalMainImage');
+    if (!mainImage) return;
+    mainImage.innerHTML = `
+        ${pricing.isOnSale ? `<span class="modal-discount-badge">-${pricing.discountPercent}% OFF</span>` : ''}
+        <img src="${images[currentModalImageIndex]}" alt="${title} - Mohor Clothings Mohor Dress" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">
+    `;
+    document.querySelectorAll('#modalThumbnails .thumbnail').forEach((thumb, thumbIndex) => {
+        thumb.classList.toggle('active', thumbIndex === currentModalImageIndex);
+    });
+}
 
 function selectOption(clickedBtn, value, type) {
     const isAlreadySelected = clickedBtn.classList.contains('selected');
@@ -1113,6 +1136,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const productModal = document.getElementById('productModal');
     if (productModal) {
         productModal.addEventListener('click', (e) => { if (e.target === productModal) closeProductModal(); });
+    }
+
+    const modalMainImage = document.getElementById('modalMainImage');
+    if (modalMainImage) {
+        let touchStartX = 0;
+        modalMainImage.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+        modalMainImage.addEventListener('touchend', (e) => {
+            const deltaX = e.changedTouches[0].screenX - touchStartX;
+            if (Math.abs(deltaX) < 40) return;
+            setModalImage(currentModalImageIndex + (deltaX < 0 ? 1 : -1));
+        }, { passive: true });
     }
 
     document.addEventListener('keydown', (e) => {
