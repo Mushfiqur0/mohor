@@ -49,7 +49,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700&family=IBM+Plex+Mono:wght@400&family=Noto+Sans+Bengali:wght@400;700&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=23">
+    <link rel="stylesheet" href="style.css?v=24">
 </head>
 <body>
 
@@ -189,63 +189,6 @@
             </div>
         </section>
     </main>
-
-    <!-- Product Quick View Modal (desktop) -->
-    <div class="modal-overlay" id="productModal">
-        <div class="modal-box quick-view-box">
-            <button type="button" class="modal-close" id="closeModalBtn" aria-label="Close">&times;</button>
-            <div class="modal-gallery">
-                <div class="modal-main-image" id="modalMainImage">
-                    <span class="modal-discount-badge" id="modalDiscountBadge" style="display:none;"></span>
-                </div>
-                <div class="modal-thumbs" id="modalThumbnails"></div>
-            </div>
-            <div class="modal-info">
-                <span class="card-cat" id="modalCategory"></span>
-                <h2 id="modalTitle"></h2>
-                <div class="modal-color-summary" id="modalColorSummary"></div>
-                
-                <!-- STRIKETHROUGH & SAVINGS PRICE ROW -->
-                <div class="modal-price-wrap" id="modalPriceWrap">
-                    <div class="modal-price" id="modalPrice"></div>
-                    <del class="modal-old-price" id="modalOriginalPrice" style="display:none;"></del>
-                    <span class="modal-savings-tag" id="modalSavingsTag" style="display:none;"></span>
-                </div>
-
-                <p class="modal-desc" id="modalDesc"></p>
-
-                <div class="opt-group" id="colorSection" style="display:none;">
-                    <h5 data-i18n="colorSelect">Select Color</h5>
-                    <div class="opt-row" id="modalColors"></div>
-                    <div class="opt-warn" id="colorWarning" data-i18n="colorWarning">Please select a color</div>
-                </div>
-
-                <div class="opt-group">
-                    <h5 data-i18n="sizeSelect">Select Size</h5>
-                    <div class="opt-row" id="modalSizes"></div>
-                    <div class="opt-warn" id="sizeWarning" data-i18n="sizeWarning">Please select a size</div>
-                    <div class="size-measure-box" id="sizeGuideDisplay"></div>
-                </div>
-
-                <div class="opt-group" id="modalDetailsSection">
-                    <h5 data-i18n="detailsTitle">The Details</h5>
-                    <ul class="details-list" id="modalDetails"></ul>
-                </div>
-
-                <div class="modal-action-row" style="display:flex; gap:12px; margin-top:12px;">
-                    <button type="button" id="modalAddToCartBtn" class="btn btn-dark btn-block modal-add-btn" data-i18n="addToCart">Add to Cart</button>
-                    <button type="button" id="modalBuyNowBtn" class="btn btn-brass btn-block modal-buy-btn" data-i18n="buyNow">Buy Now</button>
-                </div>
-            </div>
-
-            <!-- RELATED PRODUCTS RECOMMENDATION ENGINE SECTION -->
-            <div class="modal-recommendations-section" id="modalRecommendationsSection">
-                <h3 class="recommendations-title" data-i18n="relatedProductsTitle">You May Also Like</h3>
-                <p class="recommendations-sub" data-i18n="relatedProductsSub">Handpicked matching items from our collection</p>
-                <div id="modalRelatedProducts" class="related-products-grid"></div>
-            </div>
-        </div>
-    </div>
 
     <!-- Cart Sidebar -->
     <div class="cart-overlay" id="cartOverlay"></div>
@@ -437,7 +380,7 @@
     </script>
 
     <script defer src="products.js?v=20"></script>
-    <script defer src="app.js?v=22"></script>
+    <script defer src="app.js?v=23"></script>
     <script defer src="cart.js?v=20"></script>
 
     <script>

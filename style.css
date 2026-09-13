@@ -521,11 +521,6 @@ select.input {
 .product-card .card-media img { width: 100%; height: 100%; object-fit: cover; transition: transform 650ms var(--ease); }
 .product-card:hover .card-media img { transform: scale(1.07); }
 
-.btn-quickview:focus, .card-cta:focus, .btn-outline:focus {
-  outline: 3px solid var(--brass);
-  outline-offset: 3px;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .product-card .card-media img { transition: none; transform: none !important; }
 }
@@ -564,16 +559,6 @@ select.input {
 }
 .card-color-more { color: var(--ink-faint); font-size: 0.7rem; font-family: var(--font-mono); }
 .card-discount { color: var(--rust); font-size: 0.72rem; font-weight: 700; margin-left: 2px; }
-.product-card .card-cta {
-  align-self: flex-start; margin-top: 7px; background: transparent; border: 1px solid var(--border-strong); color: var(--ink);
-  padding: 7px 12px; font-size: 0.66rem; font-weight: 600; letter-spacing: 1.1px; text-transform: uppercase; border-radius: var(--radius-full);
-  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
-}
-.product-card .card-cta, .btn-quickview { display: inline-flex; align-items: center; gap: 6px; }
-.quick-view-icon { display: inline-flex; width: 15px; height: 15px; }
-.quick-view-icon svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.product-card:hover .card-cta { background: var(--ink); color: var(--muslin); border-color: var(--ink); }
-
 /* --- Discount Badges (Pinned to Top-Left) & Strikethrough Pricing --- */
 .sale-badge,
 .badge-sale,
