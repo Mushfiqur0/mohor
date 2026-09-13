@@ -29,7 +29,7 @@ window.uiTranslations = {
         searchPlaceholder: "Search the collection…",
         sizeSelect: "Select Size", sizeWarning: "Please select a size", colorSelect: "Select Color", colorWarning: "Please select a color",
         descTitle: "Description", detailsTitle: "The Details",
-        addToCart: "Add to Cart", buyNow: "Buy Now", quickView: "Quick View", backBtn: "Back",
+        addToCart: "Add to Cart", buyNow: "Buy Now", backBtn: "Back",
         addedToCart: "Added to your cart",
         cartTitle: "Your Cart", cartEmpty: "Your cart is empty.", cartEmptySub: "Pieces you add will appear here.",
         continueShopping: "Continue Shopping",
@@ -98,7 +98,7 @@ window.uiTranslations = {
         searchPlaceholder: "কালেকশনে খুঁজুন…",
         sizeSelect: "সাইজ নির্বাচন করুন", sizeWarning: "অনুগ্রহ করে একটি সাইজ নির্বাচন করুন", colorSelect: "রং নির্বাচন করুন", colorWarning: "অনুগ্রহ করে একটি রং নির্বাচন করুন",
         descTitle: "বিবরণ", detailsTitle: "বিস্তারিত",
-        addToCart: "কার্টে যোগ করুন", buyNow: "এখনই কিনুন", quickView: "কুইক ভিউ", backBtn: "ফিরে যান",
+        addToCart: "কার্টে যোগ করুন", buyNow: "এখনই কিনুন", backBtn: "ফিরে যান",
         addedToCart: "কার্টে যোগ করা হয়েছে",
         cartTitle: "আপনার কার্ট", cartEmpty: "আপনার কার্ট খালি।", cartEmptySub: "আপনার যোগ করা পণ্য এখানে দেখা যাবে।",
         continueShopping: "কেনাকাটা চালিয়ে যান",
@@ -559,12 +559,40 @@ function productPageUrl(product) {
     return `/product/?id=${encodeURIComponent(String(product.id))}`;
 }
 
-function colorSwatchesHtml(product) {
-    let colors = product.colors;
-    if (!Array.isArray(colors) && colors && typeof colors === 'object') {
-        colors = colors[window.currentLang] || colors.en || [];
+function getProductColors(product) {
+    if (!product || !product.colors) return [];
+    const normalizeColors = value => {
+        if (Array.isArray(value)) return value;
+        if (typeof value === 'string') return value.split(',').map(color => color.trim()).filter(Boolean);
+        return [];
+    };
+    if (Array.isArray(product.colors) || typeof product.colors === 'string') return normalizeColors(product.colors);
+    if (typeof product.colors === 'object') {
+        return normalizeColors(product.colors[window.currentLang] || product.colors.en || product.colors.bn);
     }
-    if (!Array.isArray(colors) || colors.length === 0) return '';
+    return [];
+}
+
+function getColorName(color) {
+    if (typeof color === 'string') return color;
+    if (!color || typeof color !== 'object') return '';
+    const rawName = color.name || color.label || color.title || color.color || '';
+    if (typeof rawName === 'string') return rawName;
+    if (rawName && typeof rawName === 'object') {
+        return rawName[window.currentLang] || rawName.en || rawName.bn || '';
+    }
+    return '';
+}
+
+function getColorValue(color) {
+    return color && typeof color === 'object'
+        ? (color.hex || color.value || color.colorCode || '')
+        : '';
+}
+
+function colorSwatchesHtml(product) {
+    const colors = getProductColors(product);
+    if (colors.length === 0) return '';
 
     const colorMap = {
         black: '#1f1c1b', white: '#fff', ivory: '#f5f0df', cream: '#f3e7cf',
@@ -577,8 +605,9 @@ function colorSwatchesHtml(product) {
 
     return `<div class="card-colors" aria-label="${window.currentLang === 'bn' ? 'উপলব্ধ রং' : 'Available colors'}">` +
         colors.slice(0, 6).map(color => {
-            const label = String(color);
-            const swatch = colorMap[label.toLowerCase()] || '#c9a14a';
+            const label = getColorName(color);
+            if (!label) return '';
+            const swatch = getColorValue(color) || colorMap[label.toLowerCase()] || '#c9a14a';
             return `<span class="card-color-option"><span class="card-color-swatch" style="--swatch-color:${swatch}" aria-hidden="true"></span><span>${label}</span></span>`;
         }).join('') +
         (colors.length > 6 ? `<span class="card-color-more">+${colors.length - 6}</span>` : '') +
@@ -661,8 +690,6 @@ function renderProducts(productsToRender) {
                     <div class="card-title"><a href="${productUrl}">${displayTitle}</a></div>
                     ${priceDisplayHtml}
                     ${colorOptionsHtml}
-                    <div class="card-desc">${(getText(product.description) || '').slice(0,140)}</div>
-                    <div style="margin-top:10px;"><button type="button" class="btn btn-outline btn-quickview"><span class="quick-view-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></span><span>${t('quickView')}</span></button></div>
                 </div>
             `;
         } else {
@@ -676,7 +703,6 @@ function renderProducts(productsToRender) {
                     <div class="card-title"><a href="${productUrl}">${displayTitle}</a></div>
                     ${priceDisplayHtml}
                     ${colorOptionsHtml}
-                    <button type="button" class="card-cta"><span class="quick-view-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></span><span>${t('quickView')}</span></button>
                 </div>
             `;
         }
@@ -709,23 +735,6 @@ function renderProducts(productsToRender) {
             card.addEventListener('mouseleave', () => {
                 window.clearInterval(slideTimer);
                 slideTimer = window.setInterval(() => showSlide(activeSlide + 1), 5000);
-            });
-        }
-
-        // Only the explicit Quick View control opens the modal. Image and title
-        // links intentionally navigate to the dedicated product page.
-        const quickBtn = card.querySelector('.btn-quickview');
-        if (quickBtn) {
-            quickBtn.addEventListener('click', (ev) => {
-                ev.stopPropagation();
-                openProductModal(product);
-            });
-        }
-        const ctaBtn = card.querySelector('.card-cta');
-        if (ctaBtn) {
-            ctaBtn.addEventListener('click', (ev) => {
-                ev.stopPropagation();
-                openProductModal(product);
             });
         }
 
