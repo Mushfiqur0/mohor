@@ -29,7 +29,7 @@ window.uiTranslations = {
         searchPlaceholder: "Search the collection…",
         sizeSelect: "Select Size", sizeWarning: "Please select a size", colorSelect: "Select Color", colorWarning: "Please select a color",
         descTitle: "Description", detailsTitle: "The Details",
-        addToCart: "Add to Cart", buyNow: "Buy Now", selectOptions: "View Options", backBtn: "Back",
+        addToCart: "Add to Cart", buyNow: "Buy Now", quickView: "Quick View", backBtn: "Back",
         addedToCart: "Added to your cart",
         cartTitle: "Your Cart", cartEmpty: "Your cart is empty.", cartEmptySub: "Pieces you add will appear here.",
         continueShopping: "Continue Shopping",
@@ -98,7 +98,7 @@ window.uiTranslations = {
         searchPlaceholder: "কালেকশনে খুঁজুন…",
         sizeSelect: "সাইজ নির্বাচন করুন", sizeWarning: "অনুগ্রহ করে একটি সাইজ নির্বাচন করুন", colorSelect: "রং নির্বাচন করুন", colorWarning: "অনুগ্রহ করে একটি রং নির্বাচন করুন",
         descTitle: "বিবরণ", detailsTitle: "বিস্তারিত",
-        addToCart: "কার্টে যোগ করুন", buyNow: "এখনই কিনুন", selectOptions: "বিস্তারিত দেখুন", backBtn: "ফিরে যান",
+        addToCart: "কার্টে যোগ করুন", buyNow: "এখনই কিনুন", quickView: "কুইক ভিউ", backBtn: "ফিরে যান",
         addedToCart: "কার্টে যোগ করা হয়েছে",
         cartTitle: "আপনার কার্ট", cartEmpty: "আপনার কার্ট খালি।", cartEmptySub: "আপনার যোগ করা পণ্য এখানে দেখা যাবে।",
         continueShopping: "কেনাকাটা চালিয়ে যান",
@@ -555,6 +555,36 @@ function productCoverImage(product) {
     return (product.images && product.images.length > 0) ? product.images[0] : 'assets/image-placeholder.svg';
 }
 
+function productPageUrl(product) {
+    return `/product/?id=${encodeURIComponent(String(product.id))}`;
+}
+
+function colorSwatchesHtml(product) {
+    let colors = product.colors;
+    if (!Array.isArray(colors) && colors && typeof colors === 'object') {
+        colors = colors[window.currentLang] || colors.en || [];
+    }
+    if (!Array.isArray(colors) || colors.length === 0) return '';
+
+    const colorMap = {
+        black: '#1f1c1b', white: '#fff', ivory: '#f5f0df', cream: '#f3e7cf',
+        beige: '#d8c3a5', brown: '#754c35', maroon: '#7d2631', red: '#b92b36',
+        pink: '#e6a7b5', 'blush pink': '#e6a7b5', peach: '#efad93',
+        orange: '#d97845', yellow: '#e4bd4f', olive: '#7b8150', green: '#5d805f',
+        sage: '#a9bca0', blue: '#4d77a8', navy: '#263b68', purple: '#76588f',
+        grey: '#969696', gray: '#969696', gold: '#c9a14a', mustard: '#c59b39'
+    };
+
+    return `<div class="card-colors" aria-label="${window.currentLang === 'bn' ? 'উপলব্ধ রং' : 'Available colors'}">` +
+        colors.slice(0, 6).map(color => {
+            const label = String(color);
+            const swatch = colorMap[label.toLowerCase()] || '#c9a14a';
+            return `<span class="card-color-swatch" style="--swatch-color:${swatch}" title="${label}" aria-label="${label}"></span>`;
+        }).join('') +
+        (colors.length > 6 ? `<span class="card-color-more">+${colors.length - 6}</span>` : '') +
+        `</div>`;
+}
+
 function renderSkeletonGrid(count) {
     const grid = document.getElementById('productGrid');
     if (!grid) return;
@@ -583,16 +613,12 @@ function renderProducts(productsToRender) {
     productsToRender.forEach(product => {
         const card = document.createElement('div');
         card.className = 'product-card';
-        card.onclick = (e) => {
-            // Prevent card modal click if interacting with slider controls
-            if (e.target.closest('.card-slider-dots') || e.target.closest('.card-slider-btn')) return;
-
-            window.location.href = `/product/?id=${encodeURIComponent(String(product.id))}`;
-        };
 
         const displayTitle = getText(product.title);
         const displayCategory = (product.category || "").replace('-', ' ');
         const pricing = window.getProductPricing(product);
+        const productUrl = productPageUrl(product);
+        const colorOptionsHtml = colorSwatchesHtml(product);
 
         const images = (product.images && product.images.length > 0) ? product.images : ['assets/image-placeholder.svg'];
         const hasMultipleImages = images.length > 1;
@@ -629,13 +655,14 @@ function renderProducts(productsToRender) {
             card.innerHTML = `
                 <div class="card-media">
                     ${saleBadgeHtml}
-                    ${mediaContentHtml}
+                    <a class="card-media-link" href="${productUrl}" aria-label="${displayTitle}">${mediaContentHtml}</a>
                 </div>
                 <div class="card-body">
-                    <div class="card-title">${displayTitle}</div>
+                    <div class="card-title"><a href="${productUrl}">${displayTitle}</a></div>
                     ${priceDisplayHtml}
+                    ${colorOptionsHtml}
                     <div class="card-desc">${(getText(product.description) || '').slice(0,140)}</div>
-                    <div style="margin-top:10px;"><button type="button" class="btn btn-outline btn-quickview">Quick View</button></div>
+                    <div style="margin-top:10px;"><button type="button" class="btn btn-outline btn-quickview">${t('quickView')}</button></div>
                 </div>
             `;
         } else {
@@ -643,13 +670,13 @@ function renderProducts(productsToRender) {
                 <div class="card-media">
                     ${saleBadgeHtml}
                     <span class="card-cat">${displayCategory}</span>
-                    ${mediaContentHtml}
-                    <div class="card-quick">Quick View</div>
+                    <a class="card-media-link" href="${productUrl}" aria-label="${displayTitle}">${mediaContentHtml}</a>
                 </div>
                 <div class="card-body">
-                    <div class="card-title">${displayTitle}</div>
+                    <div class="card-title"><a href="${productUrl}">${displayTitle}</a></div>
                     ${priceDisplayHtml}
-                    <button type="button" class="card-cta">${t('selectOptions')}</button>
+                    ${colorOptionsHtml}
+                    <button type="button" class="card-cta">${t('quickView')}</button>
                 </div>
             `;
         }
@@ -684,28 +711,20 @@ function renderProducts(productsToRender) {
             });
         }
 
-        // Make card keyboard-focusable and accessible
-        card.tabIndex = 0;
-        card.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                window.location.href = `/product/?id=${encodeURIComponent(String(product.id))}`;
-            }
-        });
-
-        // Attach quick view handler for list mode or card-cta for grid
+        // Only the explicit Quick View control opens the modal. Image and title
+        // links intentionally navigate to the dedicated product page.
         const quickBtn = card.querySelector('.btn-quickview');
         if (quickBtn) {
             quickBtn.addEventListener('click', (ev) => {
                 ev.stopPropagation();
-                window.location.href = `/product/?id=${encodeURIComponent(String(product.id))}`;
+                openProductModal(product);
             });
         }
         const ctaBtn = card.querySelector('.card-cta');
         if (ctaBtn) {
             ctaBtn.addEventListener('click', (ev) => {
                 ev.stopPropagation();
-                window.location.href = `/product/?id=${encodeURIComponent(String(product.id))}`;
+                openProductModal(product);
             });
         }
 

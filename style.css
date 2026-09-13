@@ -508,7 +508,7 @@ select.input {
 .product-card {
   background: var(--card-bg); border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border);
   transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
-  display: flex; flex-direction: column; cursor: pointer; color: var(--ink);
+  display: flex; flex-direction: column; color: var(--ink);
 }
 .product-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); border-color: var(--border-strong); }
 .product-card:focus {
@@ -517,6 +517,7 @@ select.input {
   box-shadow: var(--shadow-sm);
 }
 .product-card .card-media { position: relative; aspect-ratio: 3 / 4; overflow: hidden; background: var(--muslin); }
+.product-card .card-media-link { display: block; height: 100%; }
 .product-card .card-media img { width: 100%; height: 100%; object-fit: cover; transition: transform 650ms var(--ease); }
 .product-card:hover .card-media img { transform: scale(1.07); }
 
@@ -552,10 +553,18 @@ select.input {
 
 .product-card .card-body { padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
 .product-card .card-title { font-size: 1rem; font-weight: 600; line-height: 1.32; color: var(--ink); }
+.product-card .card-title a { transition: color var(--dur-fast) var(--ease); }
+.product-card .card-title a:hover { color: var(--brass-deep); }
 .product-card .card-price { font-family: var(--font-mono); color: var(--brass-deep); font-weight: 600; font-size: 0.95rem; margin-top: auto; }
+.card-colors { display: flex; align-items: center; gap: 6px; min-height: 19px; margin-top: 1px; }
+.card-color-swatch {
+  width: 14px; height: 14px; border-radius: 50%; background: var(--swatch-color);
+  border: 1px solid rgba(34, 27, 24, 0.2); box-shadow: inset 0 0 0 2px rgba(255,255,255,.38);
+}
+.card-color-more { color: var(--ink-faint); font-size: 0.7rem; font-family: var(--font-mono); }
 .product-card .card-cta {
-  margin-top: 10px; width: 100%; background: var(--surface); border: 1px solid var(--border-strong); color: var(--ink);
-  padding: 11px; font-size: 0.72rem; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase; border-radius: var(--radius-sm);
+  align-self: flex-start; margin-top: 7px; background: transparent; border: 1px solid var(--border-strong); color: var(--ink);
+  padding: 8px 12px; font-size: 0.66rem; font-weight: 600; letter-spacing: 1.1px; text-transform: uppercase; border-radius: var(--radius-full);
   transition: background var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
 .product-card:hover .card-cta { background: var(--ink); color: var(--muslin); border-color: var(--ink); }
@@ -800,9 +809,27 @@ select.input {
 .modal-info .modal-action-row { position: sticky; bottom: 12px; z-index: 12; display: flex; gap: 12px; }
 .modal-info .modal-action-row .btn { flex: 1; }
 
+/* Compact quick view keeps shoppers on the collection page. The full
+   product page remains available through direct product links elsewhere. */
+.quick-view-box { max-width: 760px; }
+.quick-view-box .modal-desc,
+.quick-view-box #modalDetailsSection,
+.quick-view-box .modal-recommendations-section,
+.quick-view-box .modal-thumbs { display: none; }
+.quick-view-box .modal-gallery { min-height: 360px; }
+.quick-view-box .modal-main-image { height: 100%; min-height: 360px; aspect-ratio: auto; }
+.quick-view-box .modal-info { display: flex; flex-direction: column; justify-content: center; }
+.quick-view-box .modal-info h2 { font-size: clamp(1.35rem, 2.2vw, 1.8rem); margin-bottom: 12px; }
+.quick-view-box .modal-price-wrap { margin-bottom: 18px; }
+.quick-view-box .opt-group { margin-bottom: 16px; }
+.quick-view-box .modal-action-row { margin-top: 8px !important; }
+
 @media (max-width: 760px) {
   .modal-box { grid-template-columns: 1fr; max-height: 92vh; overflow-y: auto; }
   .modal-info { padding: 24px 20px; }
+  .quick-view-box .modal-gallery,
+  .quick-view-box .modal-main-image { min-height: 280px; height: 280px; }
+  .quick-view-box .modal-info { justify-content: flex-start; }
 }
 
 /* ==========================================================================
@@ -1163,11 +1190,6 @@ select.input {
 .product-grid.view-list .product-card { display: flex; gap: 18px; padding: 14px; align-items: center; }
 .product-grid.view-list .card-media { flex: 0 0 200px; }
 .product-grid.view-list .card-body { flex: 1; }
-
-/* Quick view overlay on cards */
-.card-media { position: relative; }
-.card-quick { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; background: rgba(0,0,0,0.45); color: #fff; padding: 8px 6px; opacity: 0; transform: translateY(6px); transition: opacity .18s ease, transform .18s ease; }
-.product-card:hover .card-quick { opacity: 1; transform: translateY(0); }
 
 /* Review styles */
 .product-reviews { margin-top: 16px; border-top: 1px dashed var(--border); padding-top: 12px; }
