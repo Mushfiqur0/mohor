@@ -153,9 +153,9 @@
                     </div>
 
                 </div>
-                <button type="button" id="mobileFilterBtn" class="btn btn-outline btn-sm mobile-filter-btn">
+                <button type="button" id="mobileFilterBtn" class="btn btn-outline btn-sm mobile-filter-btn" aria-expanded="false" aria-controls="sidebar">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
-                    <span data-i18n="filterBtn">Filters</span>
+                    <span>Menu</span>
                 </button>
             </div>
 
@@ -163,25 +163,45 @@
                 <div class="filters-overlay" id="filtersOverlay"></div>
                 <aside class="filters" id="sidebar">
                     <div class="filters-head">
-                        <strong data-i18n="filterBtn">Filters</strong>
+                        <strong>Shop menu</strong>
                         <button type="button" class="close-filters" id="closeFiltersBtn" data-i18n-aria="closeFilters" aria-label="Close filters">&times;</button>
                     </div>
 
-                    <div class="filter-group">
-                        <h4 data-i18n="catTitle">Category</h4>
-                        <label class="filter-option highlight-sale-option"><input type="checkbox" class="filter-checkbox" value="on-sale" id="cat-onsale"> <span data-i18n="catOnSale">🔥 On Sale</span></label>
-                        <label class="filter-option"><input type="checkbox" class="filter-checkbox" value="kurti" id="cat-kurti"> <span data-i18n="catKurti">Kurti</span></label>
-                        <label class="filter-option"><input type="checkbox" class="filter-checkbox" value="three-piece" id="cat-threepiece"> <span data-i18n="catThreePiece">Three Piece</span></label>
-                        <label class="filter-option"><input type="checkbox" class="filter-checkbox" value="khadi" id="cat-khadi"> <span data-i18n="catKhadi">Khadi</span></label>
-                        <label class="filter-option"><input type="checkbox" class="filter-checkbox" value="formal" id="cat-formal"> <span data-i18n="catFormal">Formal Wear</span></label>
-                    </div>
+                    <section class="menu-section">
+                        <h4>Browse by category</h4>
+                        <div class="filter-group menu-category-group">
+                            <label class="filter-option highlight-sale-option"><input type="checkbox" class="filter-checkbox" value="on-sale" id="cat-onsale"> <span data-i18n="catOnSale">🔥 On Sale</span></label>
+                            <label class="filter-option"><input type="checkbox" class="filter-checkbox" value="kurti" id="cat-kurti"> <span data-i18n="catKurti">Kurti</span></label>
+                            <label class="filter-option"><input type="checkbox" class="filter-checkbox" value="three-piece" id="cat-threepiece"> <span data-i18n="catThreePiece">Three Piece</span></label>
+                            <label class="filter-option"><input type="checkbox" class="filter-checkbox" value="khadi" id="cat-khadi"> <span data-i18n="catKhadi">Khadi</span></label>
+                            <label class="filter-option"><input type="checkbox" class="filter-checkbox" value="formal" id="cat-formal"> <span data-i18n="catFormal">Formal Wear</span></label>
+                        </div>
+                    </section>
 
-                    <div class="filter-group">
-                        <h4 data-i18n="priceTitle">Price</h4>
-                        <label class="filter-option"><input type="checkbox" class="filter-checkbox price-filter" value="under-1500" id="price-1"> <span data-i18n="price1">Under ৳1500</span></label>
-                        <label class="filter-option"><input type="checkbox" class="filter-checkbox price-filter" value="1500-2500" id="price-2"> <span data-i18n="price2">৳1500 – ৳2500</span></label>
-                        <label class="filter-option"><input type="checkbox" class="filter-checkbox price-filter" value="above-2500" id="price-3"> <span data-i18n="price3">Above ৳2500</span></label>
-                    </div>
+                    <section class="menu-section">
+                        <h4>Filter products</h4>
+                        <div class="filter-group">
+                            <label class="filter-option"><input type="checkbox" class="filter-checkbox price-filter" value="under-1500" id="price-1"> <span data-i18n="price1">Under ৳1500</span></label>
+                            <label class="filter-option"><input type="checkbox" class="filter-checkbox price-filter" value="1500-2500" id="price-2"> <span data-i18n="price2">৳1500 – ৳2500</span></label>
+                            <label class="filter-option"><input type="checkbox" class="filter-checkbox price-filter" value="above-2500" id="price-3"> <span data-i18n="price3">Above ৳2500</span></label>
+                        </div>
+                        <div class="custom-price">
+                            <span>Custom price</span>
+                            <div class="custom-price-fields">
+                                <label><span class="sr-only">Minimum price</span><input type="number" id="customPriceMin" min="0" placeholder="Min ৳"></label>
+                                <span aria-hidden="true">-</span>
+                                <label><span class="sr-only">Maximum price</span><input type="number" id="customPriceMax" min="0" placeholder="Max ৳"></label>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="menu-section menu-links-section">
+                        <h4>More from Mohor</h4>
+                        <a href="/wishlist/" class="menu-link"><span aria-hidden="true">♥</span> Wishlist</a>
+                        <a href="/order-history/" class="menu-link">Order history</a>
+                        <a href="/policy/" class="menu-link">Delivery &amp; returns</a>
+                        <a href="/about/" class="menu-link">About us</a>
+                    </section>
 
                     <button type="button" id="clearFiltersBtn" class="btn-ghost filters-clear" data-i18n="clearFilters">Clear all</button>
                 </aside>

@@ -880,6 +880,10 @@ function updateProducts() {
 
     const activeCategories = Array.from(document.querySelectorAll('input[id^="cat-"]:checked')).map(cb => cb.value);
     const activePrices = Array.from(document.querySelectorAll('.price-filter:checked')).map(cb => cb.value);
+    const customMin = Number(document.getElementById('customPriceMin')?.value);
+    const customMax = Number(document.getElementById('customPriceMax')?.value);
+    const hasCustomMin = Number.isFinite(customMin) && customMin >= 0 && document.getElementById('customPriceMin')?.value !== '';
+    const hasCustomMax = Number.isFinite(customMax) && customMax >= 0 && document.getElementById('customPriceMax')?.value !== '';
     const sortValue = sortSelect.value;
     const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
@@ -900,6 +904,8 @@ function updateProducts() {
             if (activePrices.includes('1500-2500') && product.price >= 1500 && product.price <= 2500) priceMatch = true;
             if (activePrices.includes('above-2500') && product.price > 2500) priceMatch = true;
         }
+        if (hasCustomMin && product.price < customMin) priceMatch = false;
+        if (hasCustomMax && product.price > customMax) priceMatch = false;
 
         // Smart broad search
         let searchMatch = true;
@@ -926,6 +932,10 @@ window.updateProducts = updateProducts;
 
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.filter-checkbox').forEach(cb => cb.addEventListener('change', updateProducts));
+    ['customPriceMin', 'customPriceMax'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) input.addEventListener('input', updateProducts);
+    });
 
     const sortSelect = document.getElementById('sortSelect');
     if (sortSelect) sortSelect.addEventListener('change', updateProducts);
@@ -1388,13 +1398,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const openFilters = () => { if (sidebar) sidebar.classList.add('active'); if (filtersOverlay) filtersOverlay.classList.add('active'); };
     const closeFilters = () => { if (sidebar) sidebar.classList.remove('active'); if (filtersOverlay) filtersOverlay.classList.remove('active'); };
     if (mobileFilterBtn) mobileFilterBtn.addEventListener('click', openFilters);
-    if (closeFiltersBtn) closeFiltersBtn.addEventListener('click', closeFilters);
-    if (filtersOverlay) filtersOverlay.addEventListener('click', closeFilters);
+    if (mobileFilterBtn) mobileFilterBtn.addEventListener('click', () => mobileFilterBtn.setAttribute('aria-expanded', 'true'));
+    if (closeFiltersBtn) closeFiltersBtn.addEventListener('click', () => {
+        closeFilters();
+        if (mobileFilterBtn) mobileFilterBtn.setAttribute('aria-expanded', 'false');
+    });
+    if (filtersOverlay) filtersOverlay.addEventListener('click', () => {
+        closeFilters();
+        if (mobileFilterBtn) mobileFilterBtn.setAttribute('aria-expanded', 'false');
+    });
 
     const clearFiltersBtn = document.getElementById('clearFiltersBtn');
     if (clearFiltersBtn) {
         clearFiltersBtn.addEventListener('click', () => {
             document.querySelectorAll('.filter-checkbox').forEach(cb => cb.checked = false);
+            ['customPriceMin', 'customPriceMax'].forEach(id => {
+                const input = document.getElementById(id);
+                if (input) input.value = '';
+            });
             updateProducts();
         });
     }
