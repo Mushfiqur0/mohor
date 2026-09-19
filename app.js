@@ -720,7 +720,7 @@ function renderProducts(productsToRender) {
 
         // FEATURE 1: Sale Badge HTML
         const hasStock = window.productHasStock(product);
-        const saleBadgeHtml = pricing.isOnSale && hasStock
+        const saleBadgeHtml = pricing.isOnSale
             ? `<span class="card-badge-sale">SALE -${pricing.discountPercent}%</span>`
             : '';
         const stockBadgeHtml = hasStock ? '' :

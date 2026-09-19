@@ -281,12 +281,16 @@ tbody tr:hover { background: rgba(245,241,236,0.6); }
 .size-block-header { display: flex; gap: 8px; margin-bottom: 8px; }
 .size-label-input { flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; background: var(--surface); }
 .size-label-input:focus { outline: none; border-color: var(--brass); box-shadow: 0 0 0 3px var(--brass-soft); }
-.size-quantity-input { width: 92px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; background: var(--surface); }
-.size-quantity-input:focus { outline: none; border-color: var(--brass); box-shadow: 0 0 0 3px var(--brass-soft); }
 .remove-size-btn { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); width: 34px; cursor: pointer; color: var(--rust); font-size: 15px; line-height: 1; }
 .remove-size-btn:hover { background: var(--rust-soft); border-color: var(--rust); }
 .size-measurements-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12.5px; font-family: var(--font-mono); background: var(--surface); resize: vertical; }
 .size-measurements-input:focus { outline: none; border-color: var(--brass); box-shadow: 0 0 0 3px var(--brass-soft); }
+.variant-stock-grid { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
+.variant-stock-grid table { min-width: 100%; margin: 0; border: 0; }
+.variant-stock-grid th, .variant-stock-grid td { padding: 9px 10px; text-align: center; white-space: nowrap; }
+.variant-stock-grid thead th { background: var(--maroon); color: #fff; font-size: 11px; }
+.variant-stock-grid tbody th { background: var(--muslin); color: var(--ink); font-size: 12px; text-align: left; }
+.variant-stock-grid input { width: 74px; padding: 7px 8px; text-align: center; font-family: var(--font-mono); }
 
 .image-preview-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .image-preview-row img { width: 56px; height: 68px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); background: var(--muslin); }
@@ -661,7 +665,7 @@ tbody tr:hover { background: rgba(245,241,236,0.6); }
                 <div class="form-group full-width">
                   <label for="prod-qty">Total Quantity / Stock</label>
                   <input type="number" id="prod-qty" min="0" placeholder="Calculated from sizes" readonly required>
-                  <div class="form-hint">This total is calculated from the quantities entered beside each size.</div>
+                  <div class="form-hint">This total is calculated from the colour-by-size stock matrix below.</div>
                 </div>
 
                 <div class="form-group full-width">
@@ -676,12 +680,12 @@ tbody tr:hover { background: rgba(245,241,236,0.6); }
                   <label>Sizes &amp; Measurements</label>
                   <div class="size-blocks-wrap" id="size-blocks-container"></div>
                   <button type="button" class="btn btn-ghost btn-sm" id="add-size-btn" style="align-self:flex-start;">+ Add another size</button>
-                  <div class="form-hint">One block per size. List each measurement on its own line.</div>
+                  <div class="form-hint">One block per size. List each measurement on its own line; enter stock in the matrix below.</div>
                 </div>
                 <div class="form-group full-width">
-                  <label>Variant stock by colour &amp; size</label>
+                  <label>Stock by colour &amp; size</label>
                   <div id="variant-stock-grid" class="variant-stock-grid"></div>
-                  <div class="form-hint">Enter available units for each colour/size combination. Leave a cell at zero when that variant is unavailable.</div>
+                  <div class="form-hint">Add colours above and sizes here, then enter available units for every combination. Leave a cell at zero when that variant is unavailable.</div>
                 </div>
 
                 <div class="form-group full-width">
@@ -1446,12 +1450,11 @@ document.getElementById('low-stock-threshold').addEventListener('input', (e) => 
 /* ---------- ADD / EDIT PRODUCT FORM ---------- */
 const sizeBlocksContainer = document.getElementById('size-blocks-container');
 
-function createSizeBlockHTML(label = '', measurementsTextEn = '', measurementsTextBn = '', quantity = 0) {
+function createSizeBlockHTML(label = '', measurementsTextEn = '', measurementsTextBn = '') {
   return `
     <div class="size-block">
       <div class="size-block-header">
         <input type="text" class="size-label-input" placeholder="e.g. 38 (M)" value="${escapeHtml(label)}">
-        <input type="number" class="size-quantity-input" min="0" placeholder="Qty" title="Available quantity for this size" value="${Number(quantity) || 0}">
         <button type="button" class="remove-size-btn" title="Remove size">&times;</button>
       </div>
       <textarea class="size-measurements-input en" rows="2" placeholder="EN: Body/Chest: 38&#10;Waist: 34-36">${escapeHtml(measurementsTextEn)}</textarea>
@@ -1459,14 +1462,12 @@ function createSizeBlockHTML(label = '', measurementsTextEn = '', measurementsTe
     </div>`;
 }
 
-function addSizeBlock(label = '', measurementsTextEn = '', measurementsTextBn = '', quantity = 0) {
-  sizeBlocksContainer.insertAdjacentHTML('beforeend', createSizeBlockHTML(label, measurementsTextEn, measurementsTextBn, quantity));
-  updateTotalQuantityField();
+function addSizeBlock(label = '', measurementsTextEn = '', measurementsTextBn = '') {
+  sizeBlocksContainer.insertAdjacentHTML('beforeend', createSizeBlockHTML(label, measurementsTextEn, measurementsTextBn));
+  renderVariantStockGrid(collectVariantStock());
 }
 function updateTotalQuantityField() {
-  const total = Array.from(sizeBlocksContainer.querySelectorAll('.size-quantity-input'))
-    .reduce((sum, input) => sum + Math.max(0, Number(input.value) || 0), 0);
-  document.getElementById('prod-qty').value = total;
+  document.getElementById('prod-qty').value = variantStockTotal() || 0;
 }
 function resetSizeBlocks() {
   sizeBlocksContainer.innerHTML = '';
@@ -1477,26 +1478,19 @@ sizeBlocksContainer.addEventListener('click', (e) => {
   if (e.target.classList.contains('remove-size-btn')) {
     if (sizeBlocksContainer.querySelectorAll('.size-block').length > 1) {
       e.target.closest('.size-block').remove();
-      updateTotalQuantityField();
+      renderVariantStockGrid(collectVariantStock());
     } else {
       showToast('At least one size is required.', 'error');
     }
   }
 });
-sizeBlocksContainer.addEventListener('input', (e) => {
-  if (e.target.classList.contains('size-quantity-input')) updateTotalQuantityField();
-});
-
 function collectSizesFromForm() {
   const sizesArray = [];
   const sizeMeasurementsMap = {};
-  const sizeQuantitiesMap = {};
   sizeBlocksContainer.querySelectorAll('.size-block').forEach(block => {
     const label = block.querySelector('.size-label-input').value.trim();
     if (!label) return;
     sizesArray.push(label);
-    sizeQuantitiesMap[label] = Math.max(0, Number(block.querySelector('.size-quantity-input').value) || 0);
-    
     const enText = block.querySelector('.size-measurements-input.en').value.trim();
     const bnText = block.querySelector('.size-measurements-input.bn').value.trim();
     
@@ -1505,10 +1499,32 @@ function collectSizesFromForm() {
       bn: (bnText || enText).replace(/\n/g, '<br>')
     };
   });
-  return { sizesArray, sizeMeasurementsMap, sizeQuantitiesMap };
+  return { sizesArray, sizeMeasurementsMap };
 }
 
-function renderVariantStockGrid(existing = {}) {
+function migrateVariantStock(existing, colors, sizes, legacySizeQuantities = {}, legacyQuantity = 0) {
+  const migrated = {};
+  const source = existing && typeof existing === 'object' ? existing : {};
+  const hasLegacyVariants = Object.keys(source).length > 0;
+  colors.forEach((color, colorIndex) => sizes.forEach((size, sizeIndex) => {
+    const key = `${color}::${size}`;
+    let value;
+    if (source[key] !== undefined) {
+      value = source[key];
+    } else if (source[color] && typeof source[color] === 'object' && source[color][size] !== undefined) {
+      value = source[color][size];
+    } else if (!hasLegacyVariants && colorIndex === 0 && legacySizeQuantities[size] !== undefined) {
+      value = legacySizeQuantities[size];
+    } else if (!hasLegacyVariants && colorIndex === 0 && sizeIndex === 0) {
+      value = legacyQuantity;
+    } else {
+      value = 0;
+    }
+    migrated[key] = Math.max(0, Number(value) || 0);
+  }));
+  return migrated;
+}
+function renderVariantStockGrid(existing = {}, legacySizeQuantities = {}, legacyQuantity = 0) {
   const grid = document.getElementById('variant-stock-grid');
   if (!grid) return;
   const colors = document.getElementById('prod-colors-en').value.split(',').map(v => v.trim()).filter(Boolean);
@@ -1517,10 +1533,11 @@ function renderVariantStockGrid(existing = {}) {
     grid.innerHTML = '<p class="form-hint" style="padding:10px;">Add colours and sizes to enter variant stock.</p>';
     return;
   }
+  const stock = migrateVariantStock(existing, colors, sizes, legacySizeQuantities, legacyQuantity);
   grid.innerHTML = `<table><thead><tr><th>Colour</th>${sizes.map(size => `<th>${escapeHtml(size)}</th>`).join('')}</tr></thead><tbody>${
     colors.map(color => `<tr><th>${escapeHtml(color)}</th>${sizes.map(size => {
       const key = `${color}::${size}`;
-      const value = existing[key] !== undefined ? Number(existing[key]) : 0;
+      const value = stock[key];
       return `<td><input type="number" min="0" data-variant-key="${escapeHtml(key)}" value="${Math.max(0, value) || 0}" aria-label="${escapeHtml(color)} ${escapeHtml(size)} stock"></td>`;
     }).join('')}</tr>`).join('')
   }</tbody></table>`;
@@ -1536,10 +1553,17 @@ function variantStockTotal() {
   const values = Object.values(collectVariantStock());
   return values.length ? values.reduce((sum, value) => sum + value, 0) : null;
 }
-document.getElementById('prod-colors-en').addEventListener('change', () => renderVariantStockGrid(collectVariantStock()));
-sizeBlocksContainer.addEventListener('input', (event) => {
-  if (event.target.classList.contains('size-label-input')) renderVariantStockGrid(collectVariantStock());
+document.getElementById('prod-colors-en').addEventListener('input', () => {
+  renderVariantStockGrid(collectVariantStock());
+  updateTotalQuantityField();
 });
+sizeBlocksContainer.addEventListener('input', (event) => {
+  if (event.target.classList.contains('size-label-input')) {
+    renderVariantStockGrid(collectVariantStock());
+    updateTotalQuantityField();
+  }
+});
+document.getElementById('variant-stock-grid').addEventListener('input', updateTotalQuantityField);
 
 /* Live image preview */
 const imagesTextarea = document.getElementById('prod-images');
@@ -1568,7 +1592,7 @@ function loadProductIntoForm(id) {
   
   document.getElementById('prod-price').value = prod.price || '';
   document.getElementById('prod-original-price').value = prod.originalPrice || '';
-  document.getElementById('prod-qty').value = prod.quantity || '';
+  document.getElementById('prod-qty').value = prod.quantity || 0;
   
   document.getElementById('prod-colors-en').value = getSafeArr(prod.colors, 'en').join(', ');
   document.getElementById('prod-colors-bn').value = getSafeArr(prod.colors, 'bn').join(', ');
@@ -1608,12 +1632,10 @@ function loadProductIntoForm(id) {
         mEn = (mData.en || '').replace(/<br>/g, '\n');
         mBn = (mData.bn || '').replace(/<br>/g, '\n');
     }
-    const sizeQuantity = prod.sizeQuantities && prod.sizeQuantities[s] !== undefined
-      ? prod.sizeQuantities[s]
-      : (prod.quantity || 0);
-    addSizeBlock(s, mEn, mBn, sizeQuantity);
+    addSizeBlock(s, mEn, mBn);
   });
-  renderVariantStockGrid(existingVariantStock);
+  renderVariantStockGrid(existingVariantStock, prod.sizeQuantities || {}, prod.quantity || 0);
+  updateTotalQuantityField();
 
   const formDisplayTitle = typeof prod.title === 'string' ? prod.title : (prod.title?.en || '');
   formHeading.textContent = `Edit Product: ${formDisplayTitle}`;
@@ -1668,11 +1690,15 @@ addProductForm.addEventListener('submit', async (e) => {
       bn: colorsBn.length > 0 ? colorsBn : colorsEn
     };
 
-    const { sizesArray, sizeMeasurementsMap, sizeQuantitiesMap } = collectSizesFromForm();
-    const variantTotal = variantStockTotal();
-    const totalQuantity = variantTotal == null
-      ? Object.values(sizeQuantitiesMap).reduce((sum, value) => sum + value, 0)
-      : variantTotal;
+      const { sizesArray, sizeMeasurementsMap } = collectSizesFromForm();
+      const variantStock = collectVariantStock();
+      const totalQuantity = Object.values(variantStock).reduce((sum, value) => sum + value, 0);
+      const sizeQuantitiesMap = sizesArray.reduce((result, size) => {
+        result[size] = Object.entries(variantStock)
+          .filter(([key]) => key.endsWith(`::${size}`))
+          .reduce((sum, [, value]) => sum + value, 0);
+        return result;
+      }, {});
     
     const measurementsGuide = {
       en: document.getElementById('prod-measurements-en').value.trim(),
@@ -1705,7 +1731,7 @@ addProductForm.addEventListener('submit', async (e) => {
 
     const payload = {
       title, category, price, originalPrice: originalPrice > price ? originalPrice : 0,
-      quantity: totalQuantity, sizeQuantities: sizeQuantitiesMap, variantStock: collectVariantStock(), colors,
+      quantity: totalQuantity, sizeQuantities: sizeQuantitiesMap, variantStock, colors,
       sizes: sizesArray, sizeMeasurements: sizeMeasurementsMap,
       measurementsGuide, description: desc, details, materials, care, seoKeywords, images
     };
