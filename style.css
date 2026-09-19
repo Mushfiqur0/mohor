@@ -579,6 +579,22 @@ select.input {
   pointer-events: none;
   letter-spacing: 0.5px;
 }
+.card-stock-badge {
+  position: absolute;
+  z-index: 3;
+  top: 12px;
+  right: 12px;
+  padding: 5px 9px;
+  border-radius: 4px;
+  background: var(--rust);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  box-shadow: 0 3px 10px rgba(94, 34, 30, .2);
+}
+.card-stock-badge-out { background: rgba(44, 35, 32, .72); }
 .price-original {
   text-decoration: line-through;
   color: var(--ink-faint);
@@ -788,6 +804,9 @@ select.input {
 .color-swatch-btn.selected .color-swatch { box-shadow: 0 0 0 2px var(--brass), inset 0 0 0 2px rgba(255,255,255,.45); }
 .opt-warn { color: var(--rust); font-size: 0.76rem; margin-top: 6px; display: none; }
 .opt-warn.show { display: block; animation: shakeError 460ms; }
+.stock-status { color: var(--sage-dark); font-size: .76rem; margin-top: 8px; }
+.stock-status.is-out { color: var(--rust); }
+.opt-btn:disabled, .opt-btn.is-sold-out { opacity: .48; cursor: not-allowed; text-decoration: line-through; }
 
 .size-measure-box { background: var(--muslin); border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 0.78rem; color: var(--ink-muted); margin-top: 10px; line-height: 1.7; display: none; }
 .size-measure-box.show { display: block; animation: fadeIn var(--dur) var(--ease); }

@@ -281,6 +281,8 @@ tbody tr:hover { background: rgba(245,241,236,0.6); }
 .size-block-header { display: flex; gap: 8px; margin-bottom: 8px; }
 .size-label-input { flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; background: var(--surface); }
 .size-label-input:focus { outline: none; border-color: var(--brass); box-shadow: 0 0 0 3px var(--brass-soft); }
+.size-quantity-input { width: 92px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; background: var(--surface); }
+.size-quantity-input:focus { outline: none; border-color: var(--brass); box-shadow: 0 0 0 3px var(--brass-soft); }
 .remove-size-btn { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); width: 34px; cursor: pointer; color: var(--rust); font-size: 15px; line-height: 1; }
 .remove-size-btn:hover { background: var(--rust-soft); border-color: var(--rust); }
 .size-measurements-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12.5px; font-family: var(--font-mono); background: var(--surface); resize: vertical; }
@@ -657,8 +659,9 @@ tbody tr:hover { background: rgba(245,241,236,0.6); }
                 </div>
 
                 <div class="form-group full-width">
-                  <label for="prod-qty">Quantity / Stock</label>
-                  <input type="number" id="prod-qty" min="0" placeholder="e.g. 15" required>
+                  <label for="prod-qty">Total Quantity / Stock</label>
+                  <input type="number" id="prod-qty" min="0" placeholder="Calculated from sizes" readonly required>
+                  <div class="form-hint">This total is calculated from the quantities entered beside each size.</div>
                 </div>
 
                 <div class="form-group full-width">
@@ -1247,6 +1250,15 @@ function stockBadge(qty) {
   if (qty <= lowStockThreshold) return `<span class="stock-badge stock-low">${qty} left</span>`;
   return `<span class="stock-badge stock-ok">${qty} in stock</span>`;
 }
+function sizeStockSummary(product) {
+  if (!Array.isArray(product.sizes) || product.sizes.length === 0) return '';
+  return product.sizes.map(size => {
+    const qty = product.sizeQuantities && product.sizeQuantities[size] !== undefined
+      ? Number(product.sizeQuantities[size]) || 0
+      : Number(product.quantity) || 0;
+    return `${size}: ${qty}`;
+  }).join(' · ');
+}
 
 function renderProductsTable() {
   const q = productSearch.trim().toLowerCase();
@@ -1265,7 +1277,7 @@ function renderProductsTable() {
   } else {
     tbody.innerHTML = pageItems.map(prod => {
       const img = prod.images && prod.images.length > 0 ? prod.images[0] : '';
-      const sizesStr = Array.isArray(prod.sizes) ? prod.sizes.join(', ') : '';
+      const sizesStr = sizeStockSummary(prod);
       const displayTitle = typeof prod.title === 'string' ? prod.title : (prod.title?.en || '');
       
       const hasDiscount = prod.originalPrice && Number(prod.originalPrice) > Number(prod.price);
@@ -1413,7 +1425,7 @@ function renderInventoryTable() {
     return `
     <tr>
       <td><strong>${escapeHtml(displayTitle)}</strong></td>
-      <td style="font-size:12px;color:#665f5b;">${escapeHtml(Array.isArray(p.sizes) ? p.sizes.join(', ') : '')}</td>
+      <td style="font-size:12px;color:#665f5b;">${escapeHtml(sizeStockSummary(p))}</td>
       <td>${stockBadge(p.quantity)}</td>
     </tr>`;
   }).join('');
@@ -1429,11 +1441,12 @@ document.getElementById('low-stock-threshold').addEventListener('input', (e) => 
 /* ---------- ADD / EDIT PRODUCT FORM ---------- */
 const sizeBlocksContainer = document.getElementById('size-blocks-container');
 
-function createSizeBlockHTML(label = '', measurementsTextEn = '', measurementsTextBn = '') {
+function createSizeBlockHTML(label = '', measurementsTextEn = '', measurementsTextBn = '', quantity = 0) {
   return `
     <div class="size-block">
       <div class="size-block-header">
         <input type="text" class="size-label-input" placeholder="e.g. 38 (M)" value="${escapeHtml(label)}">
+        <input type="number" class="size-quantity-input" min="0" placeholder="Qty" title="Available quantity for this size" value="${Number(quantity) || 0}">
         <button type="button" class="remove-size-btn" title="Remove size">&times;</button>
       </div>
       <textarea class="size-measurements-input en" rows="2" placeholder="EN: Body/Chest: 38&#10;Waist: 34-36">${escapeHtml(measurementsTextEn)}</textarea>
@@ -1441,8 +1454,14 @@ function createSizeBlockHTML(label = '', measurementsTextEn = '', measurementsTe
     </div>`;
 }
 
-function addSizeBlock(label = '', measurementsTextEn = '', measurementsTextBn = '') {
-  sizeBlocksContainer.insertAdjacentHTML('beforeend', createSizeBlockHTML(label, measurementsTextEn, measurementsTextBn));
+function addSizeBlock(label = '', measurementsTextEn = '', measurementsTextBn = '', quantity = 0) {
+  sizeBlocksContainer.insertAdjacentHTML('beforeend', createSizeBlockHTML(label, measurementsTextEn, measurementsTextBn, quantity));
+  updateTotalQuantityField();
+}
+function updateTotalQuantityField() {
+  const total = Array.from(sizeBlocksContainer.querySelectorAll('.size-quantity-input'))
+    .reduce((sum, input) => sum + Math.max(0, Number(input.value) || 0), 0);
+  document.getElementById('prod-qty').value = total;
 }
 function resetSizeBlocks() {
   sizeBlocksContainer.innerHTML = '';
@@ -1453,19 +1472,25 @@ sizeBlocksContainer.addEventListener('click', (e) => {
   if (e.target.classList.contains('remove-size-btn')) {
     if (sizeBlocksContainer.querySelectorAll('.size-block').length > 1) {
       e.target.closest('.size-block').remove();
+      updateTotalQuantityField();
     } else {
       showToast('At least one size is required.', 'error');
     }
   }
 });
+sizeBlocksContainer.addEventListener('input', (e) => {
+  if (e.target.classList.contains('size-quantity-input')) updateTotalQuantityField();
+});
 
 function collectSizesFromForm() {
   const sizesArray = [];
   const sizeMeasurementsMap = {};
+  const sizeQuantitiesMap = {};
   sizeBlocksContainer.querySelectorAll('.size-block').forEach(block => {
     const label = block.querySelector('.size-label-input').value.trim();
     if (!label) return;
     sizesArray.push(label);
+    sizeQuantitiesMap[label] = Math.max(0, Number(block.querySelector('.size-quantity-input').value) || 0);
     
     const enText = block.querySelector('.size-measurements-input.en').value.trim();
     const bnText = block.querySelector('.size-measurements-input.bn').value.trim();
@@ -1475,7 +1500,7 @@ function collectSizesFromForm() {
       bn: (bnText || enText).replace(/\n/g, '<br>')
     };
   });
-  return { sizesArray, sizeMeasurementsMap };
+  return { sizesArray, sizeMeasurementsMap, sizeQuantitiesMap };
 }
 
 /* Live image preview */
@@ -1544,7 +1569,10 @@ function loadProductIntoForm(id) {
         mEn = (mData.en || '').replace(/<br>/g, '\n');
         mBn = (mData.bn || '').replace(/<br>/g, '\n');
     }
-    addSizeBlock(s, mEn, mBn);
+    const sizeQuantity = prod.sizeQuantities && prod.sizeQuantities[s] !== undefined
+      ? prod.sizeQuantities[s]
+      : (prod.quantity || 0);
+    addSizeBlock(s, mEn, mBn, sizeQuantity);
   });
 
   const formDisplayTitle = typeof prod.title === 'string' ? prod.title : (prod.title?.en || '');
@@ -1586,7 +1614,6 @@ addProductForm.addEventListener('submit', async (e) => {
     const category = document.getElementById('prod-category').value;
     const price = Number(document.getElementById('prod-price').value);
     const originalPrice = Number(document.getElementById('prod-original-price').value) || 0;
-    const quantity = Number(document.getElementById('prod-qty').value);
     
     const colorNamesEn = document.getElementById('prod-colors-en').value.split(',').map(c => c.trim()).filter(Boolean);
     const colorsBn = document.getElementById('prod-colors-bn').value.split(',').map(c => c.trim()).filter(Boolean);
@@ -1600,7 +1627,8 @@ addProductForm.addEventListener('submit', async (e) => {
       bn: colorsBn.length > 0 ? colorsBn : colorsEn
     };
 
-    const { sizesArray, sizeMeasurementsMap } = collectSizesFromForm();
+    const { sizesArray, sizeMeasurementsMap, sizeQuantitiesMap } = collectSizesFromForm();
+    const totalQuantity = Object.values(sizeQuantitiesMap).reduce((sum, value) => sum + value, 0);
     
     const measurementsGuide = {
       en: document.getElementById('prod-measurements-en').value.trim(),
@@ -1632,7 +1660,8 @@ addProductForm.addEventListener('submit', async (e) => {
     if (images.length === 0) throw new Error('Add at least one image link.');
 
     const payload = {
-      title, category, price, originalPrice: originalPrice > price ? originalPrice : 0, quantity, colors,
+      title, category, price, originalPrice: originalPrice > price ? originalPrice : 0,
+      quantity: totalQuantity, sizeQuantities: sizeQuantitiesMap, colors,
       sizes: sizesArray, sizeMeasurements: sizeMeasurementsMap,
       measurementsGuide, description: desc, details, materials, care, seoKeywords, images
     };
