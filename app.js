@@ -401,11 +401,14 @@ window.productHasStock = function(product) {
 };
 
 function getProductColorsForStock(product) {
+    const colorName = color => typeof color === 'string'
+        ? color
+        : (color?.name?.en || color?.name?.bn || color?.name || color?.label || color?.title || '');
     const colors = product && product.colors;
-    if (Array.isArray(colors)) return colors.map(color => typeof color === 'string' ? color : (color?.name?.en || color?.name || color?.label || '')).filter(Boolean);
+    if (Array.isArray(colors)) return colors.map(colorName).filter(Boolean);
     if (colors && typeof colors === 'object') {
         const values = colors.en || colors.bn || [];
-        return Array.isArray(values) ? values.map(String) : [];
+        return Array.isArray(values) ? values.map(colorName).filter(Boolean) : [];
     }
     return ['Default'];
 }
