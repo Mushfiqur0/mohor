@@ -109,12 +109,23 @@ window.addToCart = function(product, size, color) {
 
     const displayColor = (color && color !== 'Default') ? color : null;
     const displayName = baseTitle + (displayColor ? ` (${displayColor})` : '');
+    const availableStock = typeof window.getProductSizeQuantity === 'function'
+        ? window.getProductSizeQuantity(product, size, displayColor)
+        : Number(product.quantity || 0);
+    if (availableStock <= 0) {
+        notify('This size is out of stock.', 'error');
+        return false;
+    }
 
     let existingItem = window.cart.find(item =>
         (id ? item.id === id : item.name === displayName) && item.size === size && (item.color || null) === displayColor
     );
 
     if (existingItem) {
+        if (existingItem.qty >= availableStock) {
+            notify('The selected size has no more stock available.', 'error');
+            return false;
+        }
         existingItem.qty += 1;
         existingItem.regularPrice = regularPrice;
         existingItem.salePrice = salePrice;
@@ -142,10 +153,21 @@ window.addToCart = function(product, size, color) {
         const tFn = (typeof window.t === 'function') ? window.t : (k => k === 'addedToCart' ? 'Added to cart!' : k);
         notify(tFn('addedToCart'), 'success');
     }
+    return true;
 };
 
 window.changeQty = function(index, delta) {
     if (!window.cart[index]) return;
+    if (delta > 0 && typeof window.getProductSizeQuantity === 'function') {
+        const item = window.cart[index];
+        const catalog = (Array.isArray(window.firestoreProducts) && window.firestoreProducts.length > 0)
+            ? window.firestoreProducts : (window.productsData || []);
+        const product = catalog.find(p => String(p.id) === String(item.id));
+        if (product && item.qty >= window.getProductSizeQuantity(product, item.size, item.color)) {
+            notify('The selected size has no more stock available.', 'error');
+            return;
+        }
+    }
     window.cart[index].qty += delta;
     if (window.cart[index].qty <= 0) window.cart.splice(index, 1);
     window.updateCartUI();

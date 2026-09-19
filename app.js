@@ -375,6 +375,31 @@ window.getProductPricing = function(product) {
     return { price, regularPrice, isOnSale, savingsAmt, discountPercent };
 };
 
+// Inventory is stored per size. Older products only have `quantity`, so treat
+// that product-level value as the availability of every listed size.
+window.getProductSizeQuantity = function(product, size, color) {
+    if (!product) return 0;
+    const sizeKey = String(size || 'Standard');
+    const colorKey = color && color !== 'Default' ? String(color) : '';
+    const variants = product.variantStock || product.stockByVariant;
+    if (variants && colorKey && variants[`${colorKey}::${sizeKey}`] !== undefined) {
+        return Math.max(0, Number(variants[`${colorKey}::${sizeKey}`]) || 0);
+    }
+    if (product.sizeQuantities && product.sizeQuantities[sizeKey] !== undefined) {
+        return Math.max(0, Number(product.sizeQuantities[sizeKey]) || 0);
+    }
+    return Math.max(0, Number(product.quantity) || 0);
+};
+
+window.productHasStock = function(product) {
+    const sizes = Array.isArray(product?.sizes) && product.sizes.length ? product.sizes : ['Standard'];
+    return sizes.some(size => window.getProductSizeQuantity(product, size) > 0);
+};
+
+window.productSizeIsAvailable = function(product, size, color) {
+    return window.getProductSizeQuantity(product, size, color) > 0;
+};
+
 let promoCountdownTimer = null;
 function initPromoBannerAndCountdown() {
     const banner = document.getElementById('topPromoBanner');
@@ -656,6 +681,9 @@ function renderProducts(productsToRender) {
         const saleBadgeHtml = pricing.isOnSale 
             ? `<span class="card-badge-sale">-${pricing.discountPercent}%</span>` 
             : '';
+        const stockBadgeHtml = window.productHasStock(product)
+            ? `<span class="card-stock-badge" aria-label="Available">SALE</span>`
+            : `<span class="card-stock-badge card-stock-badge-out" aria-label="Sold out">SOLD OUT</span>`;
 
         // FEATURE 1: Strikethrough Pricing HTML
         const priceDisplayHtml = pricing.isOnSale
@@ -684,6 +712,7 @@ function renderProducts(productsToRender) {
             card.innerHTML = `
                 <div class="card-media">
                     ${saleBadgeHtml}
+                    ${stockBadgeHtml}
                     <a class="card-media-link" href="${productUrl}" aria-label="${displayTitle}">${mediaContentHtml}</a>
                 </div>
                 <div class="card-body">
@@ -696,6 +725,7 @@ function renderProducts(productsToRender) {
             card.innerHTML = `
                 <div class="card-media">
                     ${saleBadgeHtml}
+                    ${stockBadgeHtml}
                     <span class="card-cat">${displayCategory}</span>
                     <a class="card-media-link" href="${productUrl}" aria-label="${displayTitle}">${mediaContentHtml}</a>
                 </div>
@@ -1044,7 +1074,13 @@ function openProductModal(product) {
 
     if (colorArray.length > 0) {
         colorSection.style.display = 'block';
-        colorArray.forEach(color => buildOptButton(colorsContainer, color, 'color'));
+        colorArray.forEach(color => {
+            const button = buildOptButton(colorsContainer, color, 'color');
+            const colorName = typeof color === 'string' ? color : (color.name?.[window.currentLang] || color.name?.en || color.label || '');
+            const available = (product.sizes || ['Standard']).some(size => window.productSizeIsAvailable(product, size, colorName));
+            button.disabled = !available;
+            button.classList.toggle('is-sold-out', !available);
+        });
     } else {
         colorSection.style.display = 'none';
         selectedColor = "Default";
@@ -1052,7 +1088,13 @@ function openProductModal(product) {
 
     const sizesContainer = document.getElementById('modalSizes');
     sizesContainer.innerHTML = '';
-    if (product.sizes) product.sizes.forEach(size => buildOptButton(sizesContainer, size, 'size'));
+    if (product.sizes) product.sizes.forEach(size => {
+        const button = buildOptButton(sizesContainer, size, 'size');
+        const available = window.productSizeIsAvailable(product, size);
+        button.disabled = !available;
+        button.classList.toggle('is-sold-out', !available);
+        button.setAttribute('aria-label', available ? `${size} available` : `${size} sold out`);
+    });
 
     const detailsList = document.getElementById('modalDetails');
     detailsList.innerHTML = '';
@@ -1102,6 +1144,7 @@ function setModalImage(index) {
 function selectOption(clickedBtn, value, type) {
     const isAlreadySelected = clickedBtn.classList.contains('selected');
     if (type === 'size') {
+        if (clickedBtn.disabled) return;
         document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
         selectedSize = isAlreadySelected ? null : value;
         const warn = document.getElementById('sizeWarning');
@@ -1119,6 +1162,7 @@ function selectOption(clickedBtn, value, type) {
             }
         }
     } else if (type === 'color') {
+        if (clickedBtn.disabled) return;
         document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
         selectedColor = isAlreadySelected ? null : value;
         const warn = document.getElementById('colorWarning');
@@ -1180,6 +1224,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const warn = document.getElementById('sizeWarning'); if (warn) warn.classList.add('show');
                 valid = false;
             }
+            if (selectedSize && !window.productSizeIsAvailable(currentViewingProduct, selectedSize, selectedColor)) {
+                const warn = document.getElementById('sizeWarning'); if (warn) { warn.textContent = 'This size is out of stock'; warn.classList.add('show'); }
+                valid = false;
+            }
             if (!selectedColor) {
                 const warn = document.getElementById('colorWarning'); if (warn) warn.classList.add('show');
                 valid = false;
@@ -1211,6 +1259,10 @@ document.addEventListener('DOMContentLoaded', () => {
             let valid = true;
             if (!selectedSize && currentViewingProduct && currentViewingProduct.sizes && currentViewingProduct.sizes.length > 0) {
                 const warn = document.getElementById('sizeWarning'); if (warn) warn.classList.add('show');
+                valid = false;
+            }
+            if (selectedSize && !window.productSizeIsAvailable(currentViewingProduct, selectedSize, selectedColor)) {
+                const warn = document.getElementById('sizeWarning'); if (warn) { warn.textContent = 'This size is out of stock'; warn.classList.add('show'); }
                 valid = false;
             }
             if (!selectedColor) {

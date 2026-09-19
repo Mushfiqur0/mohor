@@ -17,6 +17,7 @@ window.productsData = [
     images: ["assets/image-placeholder.svg", "assets/banner-800.webp"],
     colors: ["Maroon", "Olive"],
     sizes: ["S", "M", "L"],
+    sizeQuantities: { S: 2, M: 4, L: 5 },
     sizeMeasurements: { M: { en: "Bust: 36in, Waist: 30in", bn: "বুক: 36in, কোমর: 30in" } },
     description: { en: "A sample fallback product used when Firestore is unavailable.", bn: "ফায়ারস্টোর অনুপলভ্য হলে ব্যবহারের জন্য নমুনা পণ্য।" },
     details: ["Hand-finished embroidery", "Machine-wash gentle"]
@@ -32,6 +33,7 @@ window.productsData = [
     images: ["assets/image-placeholder.svg"],
     colors: ["Navy", "Blush Pink"],
     sizes: ["M", "L", "XL"],
+    sizeQuantities: { M: 3, L: 5, XL: 0 },
     sizeMeasurements: { L: { en: "Bust: 38in, Waist: 32in", bn: "বুক: 38in, কোমর: 32in" } },
     description: { en: "Elegant kurti crafted for comfort and daily luxury.", bn: "দৈনন্দিন মার্জিত লুকের জন্য বিশেষ ভাবে তৈরি কুর্তি।" },
     details: ["Pure cotton weave", "Handicraft detailing"]

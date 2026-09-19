@@ -90,6 +90,7 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
                 <h5 data-i18n="sizeSelect">Select Size</h5>
                 <div class="opt-row" id="sizeOptions"></div>
                 <div class="opt-warn" id="sizeWarning" data-i18n="sizeWarning">Please select a size</div>
+                <div class="stock-status" id="stockStatus" aria-live="polite"></div>
                 <div class="size-measure-box" id="sizeMeasurements"></div>
             </div>
 
@@ -404,12 +405,37 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
             // Sizes (toggle to unselect)
             const sizeContainer = document.getElementById('sizeOptions');
             const measurementBox = document.getElementById('sizeMeasurements');
+            const stockStatus = document.getElementById('stockStatus');
+            const getSizeQuantity = (size, color) => typeof window.getProductSizeQuantity === 'function'
+                ? window.getProductSizeQuantity(activeProduct, size, color)
+                : Number(activeProduct.quantity || 0);
+            const refreshSizeAvailability = () => {
+                const buttons = sizeContainer.querySelectorAll('.size-btn');
+                let availableCount = 0;
+                buttons.forEach(btn => {
+                    const size = btn.dataset.size;
+                    const available = getSizeQuantity(size, currentSelectedColor) > 0;
+                    btn.disabled = !available;
+                    btn.classList.toggle('is-sold-out', !available);
+                    btn.setAttribute('aria-label', available ? `${size} available` : `${size} sold out`);
+                    if (available) availableCount++;
+                    if (!available && btn.classList.contains('selected')) {
+                        btn.classList.remove('selected');
+                        currentSelectedSize = null;
+                    }
+                });
+                if (stockStatus) {
+                    stockStatus.textContent = availableCount ? 'Available in selected sizes' : 'Out of stock';
+                    stockStatus.classList.toggle('is-out', availableCount === 0);
+                }
+            };
             if (activeProduct.sizes && activeProduct.sizes.length > 0) {
                 activeProduct.sizes.forEach(size => {
                     const btn = document.createElement('button');
                     btn.type = 'button';
                     btn.className = 'opt-btn size-btn';
                     btn.innerText = size;
+                    btn.dataset.size = size;
                     btn.onclick = () => {
                         const warn = document.getElementById('sizeWarning');
                         if (btn.classList.contains('selected')) {
@@ -433,6 +459,7 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
                     sizeContainer.appendChild(btn);
                 });
             }
+            refreshSizeAvailability();
 
             // Colors (toggle to unselect)
             const colorContainer = document.getElementById('colorOptions');
@@ -455,16 +482,22 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
                     btn.innerHTML = colorValue
                         ? `<span class="color-swatch" aria-hidden="true"></span><span>${colorName}</span>`
                         : colorName;
+                    const colorHasStock = (activeProduct.sizes || ['Standard']).some(size => getSizeQuantity(size, colorName) > 0);
+                    btn.disabled = !colorHasStock;
+                    btn.classList.toggle('is-sold-out', !colorHasStock);
+                    if (!colorHasStock) btn.setAttribute('aria-label', `${colorName} sold out`);
                     btn.onclick = () => {
                         const warn = document.getElementById('colorWarning');
                         if (btn.classList.contains('selected')) {
                             btn.classList.remove('selected');
                             currentSelectedColor = null;
+                            refreshSizeAvailability();
                         } else {
                             document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
                             btn.classList.add('selected');
                             currentSelectedColor = colorName;
                             if (warn) warn.classList.remove('show');
+                            refreshSizeAvailability();
                         }
                     };
                     colorContainer.appendChild(btn);
@@ -477,6 +510,11 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
                     const warn = document.getElementById('sizeWarning'); if (warn) warn.classList.add('show');
                     valid = false;
                 }
+                if (currentSelectedSize && getSizeQuantity(currentSelectedSize, currentSelectedColor) <= 0) {
+                    const warn = document.getElementById('sizeWarning');
+                    if (warn) { warn.textContent = 'This size is out of stock'; warn.classList.add('show'); }
+                    valid = false;
+                }
                 if (colorArray.length > 0 && !currentSelectedColor) {
                     const warn = document.getElementById('colorWarning'); if (warn) warn.classList.add('show');
                     valid = false;
@@ -487,9 +525,9 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
             function doAddToCart() {
                 if (!validateSelection()) return false;
                 if (typeof window.addToCart === 'function') {
-                    window.addToCart(activeProduct, currentSelectedSize || 'Standard', currentSelectedColor);
+                    return window.addToCart(activeProduct, currentSelectedSize || 'Standard', currentSelectedColor);
                 }
-                return true;
+                return false;
             }
 
             document.getElementById('addToCartBtn').onclick = doAddToCart;
