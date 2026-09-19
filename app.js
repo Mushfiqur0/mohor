@@ -385,6 +385,9 @@ window.getProductSizeQuantity = function(product, size, color) {
     if (variants && colorKey && variants[`${colorKey}::${sizeKey}`] !== undefined) {
         return Math.max(0, Number(variants[`${colorKey}::${sizeKey}`]) || 0);
     }
+    if (variants && colorKey && variants[colorKey] && variants[colorKey][sizeKey] !== undefined) {
+        return Math.max(0, Number(variants[colorKey][sizeKey]) || 0);
+    }
     if (product.sizeQuantities && product.sizeQuantities[sizeKey] !== undefined) {
         return Math.max(0, Number(product.sizeQuantities[sizeKey]) || 0);
     }
@@ -393,8 +396,22 @@ window.getProductSizeQuantity = function(product, size, color) {
 
 window.productHasStock = function(product) {
     const sizes = Array.isArray(product?.sizes) && product.sizes.length ? product.sizes : ['Standard'];
-    return sizes.some(size => window.getProductSizeQuantity(product, size) > 0);
+    const colors = getProductColorsForStock(product);
+    return colors.some(color => sizes.some(size => window.getProductSizeQuantity(product, size, color) > 0));
 };
+
+function getProductColorsForStock(product) {
+    const colorName = color => typeof color === 'string'
+        ? color
+        : (color?.name?.en || color?.name?.bn || color?.name || color?.label || color?.title || '');
+    const colors = product && product.colors;
+    if (Array.isArray(colors)) return colors.map(colorName).filter(Boolean);
+    if (colors && typeof colors === 'object') {
+        const values = colors.en || colors.bn || [];
+        return Array.isArray(values) ? values.map(colorName).filter(Boolean) : [];
+    }
+    return ['Default'];
+}
 
 window.productSizeIsAvailable = function(product, size, color) {
     return window.getProductSizeQuantity(product, size, color) > 0;
@@ -520,6 +537,9 @@ function normalizeProductSnapshot(doc) {
         colors: data.colors || [],
         sizes: Array.isArray(data.sizes) ? data.sizes : [],
         sizeMeasurements: data.sizeMeasurements || {},
+        sizeQuantities: data.sizeQuantities || {},
+        variantStock: data.variantStock || data.stockByVariant || {},
+        quantity: Number(data.quantity || 0),
         measurementsGuide: data.measurementsGuide || "",
         description: data.description || "",
         details: data.details || [],
@@ -583,6 +603,27 @@ function productCoverImage(product) {
 function productPageUrl(product) {
     return `/product/?id=${encodeURIComponent(String(product.id))}`;
 }
+
+const WISHLIST_KEY = 'mohor_wishlist';
+window.getWishlistIds = function() {
+    try {
+        const parsed = JSON.parse(localStorage.getItem(WISHLIST_KEY) || '[]');
+        return Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch (_) {
+        return [];
+    }
+};
+window.isWishlisted = function(id) {
+    return window.getWishlistIds().includes(String(id));
+};
+window.toggleWishlist = function(id) {
+    const key = String(id);
+    const ids = window.getWishlistIds();
+    const next = ids.includes(key) ? ids.filter(value => value !== key) : [...ids, key];
+    localStorage.setItem(WISHLIST_KEY, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent('wishlistChanged', { detail: { id: key, active: next.includes(key) } }));
+    return next.includes(key);
+};
 
 function getProductColors(product) {
     if (!product || !product.colors) return [];
@@ -650,7 +691,7 @@ function renderSkeletonGrid(count) {
 }
 
 function renderProducts(productsToRender) {
-    const productGrid = document.getElementById('productGrid');
+    const productGrid = document.getElementById('productGrid') || document.getElementById('wishlistGrid');
     if (!productGrid) return;
 
     // Apply view classes from saved preferences
@@ -678,12 +719,12 @@ function renderProducts(productsToRender) {
         const hasMultipleImages = images.length > 1;
 
         // FEATURE 1: Sale Badge HTML
-        const saleBadgeHtml = pricing.isOnSale 
-            ? `<span class="card-badge-sale">-${pricing.discountPercent}%</span>` 
+        const hasStock = window.productHasStock(product);
+        const saleBadgeHtml = pricing.isOnSale && hasStock
+            ? `<span class="card-badge-sale">SALE -${pricing.discountPercent}%</span>`
             : '';
-        const stockBadgeHtml = window.productHasStock(product)
-            ? `<span class="card-stock-badge" aria-label="Available">SALE</span>`
-            : `<span class="card-stock-badge card-stock-badge-out" aria-label="Sold out">SOLD OUT</span>`;
+        const stockBadgeHtml = hasStock ? '' :
+            `<span class="card-stock-badge card-stock-badge-out" aria-label="Sold out">SOLD OUT</span>`;
 
         // FEATURE 1: Strikethrough Pricing HTML
         const priceDisplayHtml = pricing.isOnSale
@@ -711,6 +752,7 @@ function renderProducts(productsToRender) {
         if (viewMode === 'list') {
             card.innerHTML = `
                 <div class="card-media">
+                    <button type="button" class="wishlist-toggle ${window.isWishlisted(product.id) ? 'is-active' : ''}" data-wishlist-id="${String(product.id)}" aria-label="${window.isWishlisted(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}" aria-pressed="${window.isWishlisted(product.id)}">${window.isWishlisted(product.id) ? '♥' : '♡'}</button>
                     ${saleBadgeHtml}
                     ${stockBadgeHtml}
                     <a class="card-media-link" href="${productUrl}" aria-label="${displayTitle}">${mediaContentHtml}</a>
@@ -724,6 +766,7 @@ function renderProducts(productsToRender) {
         } else {
             card.innerHTML = `
                 <div class="card-media">
+                    <button type="button" class="wishlist-toggle ${window.isWishlisted(product.id) ? 'is-active' : ''}" data-wishlist-id="${String(product.id)}" aria-label="${window.isWishlisted(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}" aria-pressed="${window.isWishlisted(product.id)}">${window.isWishlisted(product.id) ? '♥' : '♡'}</button>
                     ${saleBadgeHtml}
                     ${stockBadgeHtml}
                     <span class="card-cat">${displayCategory}</span>
@@ -769,6 +812,17 @@ function renderProducts(productsToRender) {
         }
 
         productGrid.appendChild(card);
+    });
+    productGrid.querySelectorAll('[data-wishlist-id]').forEach(button => {
+        button.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            const active = window.toggleWishlist(button.dataset.wishlistId);
+            button.classList.toggle('is-active', active);
+            button.setAttribute('aria-pressed', String(active));
+            button.setAttribute('aria-label', active ? 'Remove from wishlist' : 'Add to wishlist');
+            button.textContent = active ? '♥' : '♡';
+        });
     });
     requestAnimationFrame(() => productGrid.classList.add('in-view'));
 }

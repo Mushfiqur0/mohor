@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wishlist | Mohor Clothings</title>
+  <link rel="stylesheet" href="/style.css?v=24">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav container">
+      <a href="/" class="brand-logo" aria-label="Mohor Clothings home">
+        <img src="/assets/logo-ink.png" alt="Mohor Clothings" width="150" height="45">
+      </a>
+      <div class="nav-links">
+        <a href="/">Shop</a>
+        <a href="/wishlist/" class="active">Wishlist</a>
+        <a href="/order-history/">Order History</a>
+      </div>
+      <div class="nav-actions">
+        <a href="/cart/" class="icon-btn" aria-label="Cart">🛍️</a>
+      </div>
+    </nav>
+  </header>
+  <main class="container wishlist-page">
+    <div class="section-head">
+      <span class="eyebrow">Saved pieces</span>
+      <h1>Your Wishlist</h1>
+      <p>Keep the pieces you love close by. Your saved items stay on this device.</p>
+    </div>
+    <div id="wishlistGrid" class="product-grid"></div>
+    <p id="wishlistEmpty" class="wishlist-empty" hidden>Your wishlist is empty. Browse the collection and tap the heart to save a piece.</p>
+  </main>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = { apiKey:"AIzaSyALxypXDkF9QexbD_wE7-ADALIdj5vd-rY", authDomain:"mohor-app.firebaseapp.com", projectId:"mohor-app", storageBucket:"mohor-app.firebasestorage.app", messagingSenderId:"989000457004", appId:"1:989000457004:web:5679b256e20d94e27daa89" };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    window.db = firebase.firestore();
+  </script>
+  <script src="/products.js?v=24"></script>
+  <script src="/app.js?v=24"></script>
+  <script src="/wishlist.js?v=1"></script>
+</body>
+</html>

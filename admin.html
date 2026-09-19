@@ -678,6 +678,11 @@ tbody tr:hover { background: rgba(245,241,236,0.6); }
                   <button type="button" class="btn btn-ghost btn-sm" id="add-size-btn" style="align-self:flex-start;">+ Add another size</button>
                   <div class="form-hint">One block per size. List each measurement on its own line.</div>
                 </div>
+                <div class="form-group full-width">
+                  <label>Variant stock by colour &amp; size</label>
+                  <div id="variant-stock-grid" class="variant-stock-grid"></div>
+                  <div class="form-hint">Enter available units for each colour/size combination. Leave a cell at zero when that variant is unavailable.</div>
+                </div>
 
                 <div class="form-group full-width">
                   <label>Size Guide (pop-up shown on the storefront)</label>
@@ -1503,6 +1508,39 @@ function collectSizesFromForm() {
   return { sizesArray, sizeMeasurementsMap, sizeQuantitiesMap };
 }
 
+function renderVariantStockGrid(existing = {}) {
+  const grid = document.getElementById('variant-stock-grid');
+  if (!grid) return;
+  const colors = document.getElementById('prod-colors-en').value.split(',').map(v => v.trim()).filter(Boolean);
+  const sizes = Array.from(sizeBlocksContainer.querySelectorAll('.size-label-input')).map(input => input.value.trim()).filter(Boolean);
+  if (!colors.length || !sizes.length) {
+    grid.innerHTML = '<p class="form-hint" style="padding:10px;">Add colours and sizes to enter variant stock.</p>';
+    return;
+  }
+  grid.innerHTML = `<table><thead><tr><th>Colour</th>${sizes.map(size => `<th>${escapeHtml(size)}</th>`).join('')}</tr></thead><tbody>${
+    colors.map(color => `<tr><th>${escapeHtml(color)}</th>${sizes.map(size => {
+      const key = `${color}::${size}`;
+      const value = existing[key] !== undefined ? Number(existing[key]) : 0;
+      return `<td><input type="number" min="0" data-variant-key="${escapeHtml(key)}" value="${Math.max(0, value) || 0}" aria-label="${escapeHtml(color)} ${escapeHtml(size)} stock"></td>`;
+    }).join('')}</tr>`).join('')
+  }</tbody></table>`;
+}
+function collectVariantStock() {
+  const result = {};
+  document.querySelectorAll('#variant-stock-grid [data-variant-key]').forEach(input => {
+    result[input.dataset.variantKey] = Math.max(0, Number(input.value) || 0);
+  });
+  return result;
+}
+function variantStockTotal() {
+  const values = Object.values(collectVariantStock());
+  return values.length ? values.reduce((sum, value) => sum + value, 0) : null;
+}
+document.getElementById('prod-colors-en').addEventListener('change', () => renderVariantStockGrid(collectVariantStock()));
+sizeBlocksContainer.addEventListener('input', (event) => {
+  if (event.target.classList.contains('size-label-input')) renderVariantStockGrid(collectVariantStock());
+});
+
 /* Live image preview */
 const imagesTextarea = document.getElementById('prod-images');
 const previewRow = document.getElementById('image-preview-row');
@@ -1537,6 +1575,7 @@ function loadProductIntoForm(id) {
   document.getElementById('prod-colors-hex').value = Array.isArray(prod.colors)
     ? prod.colors.map(c => typeof c === 'object' ? (c.hex || '') : '').join(', ')
     : '';
+  const existingVariantStock = prod.variantStock || prod.stockByVariant || {};
   
   document.getElementById('prod-measurements-en').value = getSafeStr(prod.measurementsGuide, 'en');
   document.getElementById('prod-measurements-bn').value = getSafeStr(prod.measurementsGuide, 'bn');
@@ -1574,6 +1613,7 @@ function loadProductIntoForm(id) {
       : (prod.quantity || 0);
     addSizeBlock(s, mEn, mBn, sizeQuantity);
   });
+  renderVariantStockGrid(existingVariantStock);
 
   const formDisplayTitle = typeof prod.title === 'string' ? prod.title : (prod.title?.en || '');
   formHeading.textContent = `Edit Product: ${formDisplayTitle}`;
@@ -1588,6 +1628,7 @@ function cancelEdit() {
   editingProductId = null;
   addProductForm.reset();
   resetSizeBlocks();
+  renderVariantStockGrid();
   updateImagePreview();
   formHeading.textContent = 'Upload New Product';
   uploadBtn.textContent = 'Upload Product to Live Website';
@@ -1628,7 +1669,10 @@ addProductForm.addEventListener('submit', async (e) => {
     };
 
     const { sizesArray, sizeMeasurementsMap, sizeQuantitiesMap } = collectSizesFromForm();
-    const totalQuantity = Object.values(sizeQuantitiesMap).reduce((sum, value) => sum + value, 0);
+    const variantTotal = variantStockTotal();
+    const totalQuantity = variantTotal == null
+      ? Object.values(sizeQuantitiesMap).reduce((sum, value) => sum + value, 0)
+      : variantTotal;
     
     const measurementsGuide = {
       en: document.getElementById('prod-measurements-en').value.trim(),
@@ -1661,7 +1705,7 @@ addProductForm.addEventListener('submit', async (e) => {
 
     const payload = {
       title, category, price, originalPrice: originalPrice > price ? originalPrice : 0,
-      quantity: totalQuantity, sizeQuantities: sizeQuantitiesMap, colors,
+      quantity: totalQuantity, sizeQuantities: sizeQuantitiesMap, variantStock: collectVariantStock(), colors,
       sizes: sizesArray, sizeMeasurements: sizeMeasurementsMap,
       measurementsGuide, description: desc, details, materials, care, seoKeywords, images
     };
@@ -1998,6 +2042,7 @@ document.getElementById('history-delete-scope-btn').addEventListener('click', ()
 
 /* ---------- INIT ---------- */
 resetSizeBlocks();
+renderVariantStockGrid();
 renderHistoryView();
 </script>
 </body>
