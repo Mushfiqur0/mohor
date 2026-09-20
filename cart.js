@@ -417,19 +417,23 @@ window.checkoutToWhatsApp = function() {
     if (!orderData) return;
 
     const WHATSAPP_NUMBER = '8801330113027';
+    // Free-text fields (item names, customer name/address) can contain
+    // characters like & or # that are meaningful in a URL, so each dynamic
+    // piece is percent-encoded individually. The %0A newlines and *bold*
+    // markers are intentional literal WhatsApp formatting, left as-is.
     let message = 'Hello Mohor Clothings! I would like to order the following items:%0A%0A';
     window.cart.forEach((item, index) => {
         const details = getCanonicalItemDetails(item);
         const itemTotal = details.effectivePrice * Number(item.qty);
-        message += `${index + 1}. ${item.name} (Size: ${item.size}) | Qty: ${item.qty} - ৳${itemTotal}%0A`;
+        message += `${index + 1}. ${encodeURIComponent(item.name)} (Size: ${encodeURIComponent(item.size)}) | Qty: ${item.qty} - ৳${itemTotal}%0A`;
     });
     message += `%0A*Subtotal: ৳${orderData.subtotal}*`;
     if (orderData.totalSavings > 0) {
         message += `%0A*Total Savings: ৳${orderData.totalSavings}*`;
     }
-    message += `%0A*Delivery (${orderData.zoneText}): ৳${orderData.deliveryFee}*`;
+    message += `%0A*Delivery (${encodeURIComponent(orderData.zoneText)}): ৳${orderData.deliveryFee}*`;
     message += `%0A*FINAL TOTAL: ৳${orderData.finalTotal}*%0A`;
-    message += `%0A*CUSTOMER DETAILS:*%0AName: ${orderData.name}%0APhone: ${orderData.phone}%0AAddress: ${orderData.address}`;
+    message += `%0A*CUSTOMER DETAILS:*%0AName: ${encodeURIComponent(orderData.name)}%0APhone: ${encodeURIComponent(orderData.phone)}%0AAddress: ${encodeURIComponent(orderData.address)}`;
 
     // Open WhatsApp first — only clear the cart once we know the redirect fired
     const win = window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, '_blank');
@@ -505,6 +509,20 @@ window.checkoutToAdmin = async function() {
         // Trigger instant Telegram notification to the store owner
         if (typeof window.sendTelegramNotification === 'function') {
             window.sendTelegramNotification({ ...newOrder, id: docRef.id });
+        }
+
+        // Track the completed purchase once, right here at the moment the
+        // order is actually confirmed written — this is the single source of
+        // truth for the Purchase conversion event (the standalone order
+        // success page intentionally stays lightweight and doesn't re-fire it).
+        if (typeof window.trackMetaEvent === 'function') {
+            window.trackMetaEvent('Purchase', {}, {
+                content_ids: window.cart.map(item => String(item.id ?? item.name)),
+                content_type: 'product',
+                num_items: verifiedItems.reduce((sum, item) => sum + item.qty, 0),
+                value: verifiedTotal,
+                currency: 'BDT'
+            });
         }
 
         notify(window.currentLang === 'en' ? 'Order placed successfully! We will contact you soon.' : 'আপনার অর্ডারটি সফলভাবে সম্পন্ন হয়েছে! আমরা শীঘ্রই যোগাযোগ করব।', 'success');

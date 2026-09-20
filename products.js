@@ -76,7 +76,12 @@ window.getRelatedProducts = function(currentProduct, limit = 4) {
 };
 
 /**
- * Render Related Products grid cards into a target container
+ * Render Related Products grid cards into a target container.
+ * Mirrors the same card template app.js's renderProducts() uses for the
+ * main shop grid (color swatches, no separate CTA button) so related items
+ * look visually consistent with the rest of the catalog rather than using
+ * an older template whose "VIEW DETAILS" button lost its styling when the
+ * shop-grid CSS moved away from that pattern.
  */
 window.renderRelatedProducts = function(currentProduct, targetContainerId = 'relatedProductsGrid') {
     const container = document.getElementById(targetContainerId);
@@ -89,38 +94,55 @@ window.renderRelatedProducts = function(currentProduct, targetContainerId = 'rel
         return;
     }
 
-    const lang = window.currentLang || 'en';
     container.innerHTML = items.map(prod => {
-        const titleStr = typeof prod.title === 'string' ? prod.title : (prod.title?.[lang] || prod.title?.en || '');
-        const images = (prod.images && prod.images.length > 0) ? prod.images : ['assets/image-placeholder.svg'];
-        const regPrice = prod.originalPrice || prod.regularPrice || prod.price;
-        const salePrice = (prod.price && Number(prod.price) < Number(regPrice)) ? prod.price : (prod.salePrice || null);
-        const isSale = salePrice && Number(salePrice) < Number(regPrice);
+        const displayTitle = typeof getText === 'function' ? getText(prod.title) : (prod.title?.[window.currentLang] || prod.title?.en || prod.title || '');
+        const displayCategory = (prod.category || '').replace('-', ' ');
+        const pricing = typeof window.getProductPricing === 'function'
+            ? window.getProductPricing(prod)
+            : { price: prod.price, regularPrice: prod.regularPrice || prod.price, isOnSale: false, discountPercent: 0 };
+        const productUrl = typeof productPageUrl === 'function' ? productPageUrl(prod) : `/product/?id=${prod.id}`;
+        const coverImage = typeof productCoverImage === 'function' ? productCoverImage(prod) : ((prod.images && prod.images[0]) || 'assets/image-placeholder.svg');
+        const colorOptionsHtml = typeof colorSwatchesHtml === 'function' ? colorSwatchesHtml(prod) : '';
+        const isWishlisted = typeof window.isWishlisted === 'function' && window.isWishlisted(prod.id);
+        const hasStock = typeof window.productHasStock === 'function' ? window.productHasStock(prod) : true;
 
-        let priceMarkup = `৳ ${regPrice}`;
-        let badgeMarkup = '';
-
-        if (isSale) {
-            const discountPct = Math.round(((regPrice - salePrice) / regPrice) * 100);
-            priceMarkup = `<span class="price-original">৳ ${regPrice}</span><span class="price-sale">৳ ${salePrice}</span>`;
-            badgeMarkup = `<span class="sale-badge">-${discountPct}% OFF</span>`;
-        }
+        const saleBadgeHtml = pricing.isOnSale ? `<span class="card-badge-sale">SALE -${pricing.discountPercent}%</span>` : '';
+        const stockBadgeHtml = hasStock ? '' : `<span class="card-stock-badge card-stock-badge-out" aria-label="Sold out">SOLD OUT</span>`;
+        const wishlistBtnHtml = typeof window.toggleWishlist === 'function'
+            ? `<button type="button" class="wishlist-toggle ${isWishlisted ? 'is-active' : ''}" data-wishlist-id="${String(prod.id)}" aria-label="${isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}" aria-pressed="${isWishlisted}">${isWishlisted ? '♥' : '♡'}</button>`
+            : '';
+        const priceDisplayHtml = pricing.isOnSale
+            ? `<div class="card-price"><span class="sale-price">৳ ${pricing.price}</span> <del class="old-price">৳ ${pricing.regularPrice}</del> <span class="card-discount">-${pricing.discountPercent}%</span></div>`
+            : `<div class="card-price">৳ ${pricing.price}</div>`;
 
         return `
             <div class="product-card" data-id="${prod.id}">
-                <a href="/product/?id=${prod.id}" class="card-img-link" aria-label="${titleStr}">
-                    <div class="card-media">
-                        <img src="${images[0]}" alt="${titleStr}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">
-                        ${badgeMarkup}
-                        <span class="card-cat">${(prod.category || '').replace('-', ' ')}</span>
-                    </div>
-                </a>
+                <div class="card-media">
+                    ${wishlistBtnHtml}
+                    ${saleBadgeHtml}
+                    ${stockBadgeHtml}
+                    <span class="card-cat">${displayCategory}</span>
+                    <a class="card-media-link" href="${productUrl}" aria-label="${displayTitle}">
+                        <img src="${coverImage}" alt="${displayTitle}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/image-placeholder.svg';">
+                    </a>
+                </div>
                 <div class="card-body">
-                    <h3 class="card-title"><a href="/product/?id=${prod.id}">${titleStr}</a></h3>
-                    <div class="card-price">${priceMarkup}</div>
-                    <a href="/product/?id=${prod.id}" class="card-cta">VIEW DETAILS</a>
+                    <div class="card-title"><a href="${productUrl}">${displayTitle}</a></div>
+                    ${priceDisplayHtml}
+                    ${colorOptionsHtml}
                 </div>
             </div>
         `;
     }).join('');
+    container.querySelectorAll('[data-wishlist-id]').forEach(button => {
+        button.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            const active = window.toggleWishlist(button.dataset.wishlistId);
+            button.classList.toggle('is-active', active);
+            button.setAttribute('aria-pressed', String(active));
+            button.setAttribute('aria-label', active ? 'Remove from wishlist' : 'Add to wishlist');
+            button.textContent = active ? '♥' : '♡';
+        });
+    });
 };

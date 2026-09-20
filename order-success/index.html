@@ -1,16 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <base href="../">
+<base href="../">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Confirmed | Mohor Clothings</title>
-    
-    <link rel="stylesheet" href="style.css?v=21">
+    <link rel="canonical" href="https://mohor.me/order-success/">
+
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#8B0000">
+
+    <link rel="stylesheet" href="style.css?v=25">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Work+Sans:wght@400;500;600&family=Noto+Sans+Bengali:wght@400;500;600&display=swap" rel="stylesheet">
-    
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
+/></noscript>
     <style>
         .success-wrapper {
             max-width: 640px;
@@ -50,7 +59,7 @@
             margin: 16px 0 24px;
         }
         .copy-btn-sm {
-            background: #880000;
+            background: var(--maroon);
             border: none;
             color: #FFFFFF;
             cursor: pointer;
@@ -61,7 +70,7 @@
             transition: background 0.2s;
         }
         .copy-btn-sm:hover {
-            background: #660000;
+            background: var(--maroon-deep, #660000);
         }
         .notice-box {
             background: var(--card-bg);
@@ -75,7 +84,7 @@
             color: var(--ink);
         }
         .notice-box a {
-            color: #880000;
+            color: var(--maroon);
             font-weight: 600;
             text-decoration: underline;
         }
@@ -211,7 +220,7 @@
                 </span>
                 
                 <div class="phone-highlight">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#880000" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--maroon)" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                     <span id="phoneNum">01330113027</span>
                     <button type="button" class="copy-btn-sm" id="copyPhoneBtn" onclick="copyPhone()">COPY</button>
                 </div>
@@ -240,9 +249,23 @@
     </main>
 
     <script>
-        let currentLang = 'en';
+        // Match the language preference set on the rest of the site
+        // (stored under the same key app.js uses) so arriving here right
+        // after checkout doesn't unexpectedly reset to English.
+        let currentLang = localStorage.getItem('mohor_lang') || 'en';
+
+        function applyLanguage() {
+            document.querySelectorAll('[data-en]').forEach(el => {
+                const text = el.getAttribute(`data-${currentLang}`);
+                if (text) el.innerText = text;
+            });
+            const label = document.getElementById('langLabel');
+            if (label) label.innerText = currentLang === 'en' ? 'বাংলা / EN' : 'EN / বাংলা';
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
+            applyLanguage();
+
             const params = new URLSearchParams(window.location.search);
             const orderId = params.get('orderId');
 
@@ -257,11 +280,8 @@
 
         function toggleLanguage() {
             currentLang = currentLang === 'en' ? 'bn' : 'en';
-            document.querySelectorAll('[data-en]').forEach(el => {
-                const text = el.getAttribute(`data-${currentLang}`);
-                if (text) el.innerText = text;
-            });
-            document.getElementById('langLabel').innerText = currentLang === 'en' ? 'বাংলা / EN' : 'EN / বাংলা';
+            localStorage.setItem('mohor_lang', currentLang);
+            applyLanguage();
         }
 
         function applySuccessTheme(theme) {
@@ -303,6 +323,49 @@
                 const btn = document.getElementById('copyPhoneBtn');
                 btn.innerText = 'COPIED!';
                 setTimeout(() => { btn.innerText = 'COPY'; }, 2000);
+            });
+        }
+    </script>
+
+    <!-- Meta Pixel Code (loaded after first render, off the critical path).
+         Purchase itself is tracked from cart.js at the moment the order is
+         actually written to the database — this page intentionally stays
+         lightweight (no Firebase) and only reports its own PageView, the
+         same as every other page on the site. -->
+    <script>
+        const loadMetaPixel = () => {
+            if (window.fbq) return;
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '920711640501746');
+            fbq('track', 'PageView');
+        };
+        let pageLoaded = document.readyState === 'complete';
+        let metaPixelScheduled = false;
+        const scheduleMetaPixel = () => {
+            if (!pageLoaded || metaPixelScheduled) return;
+            metaPixelScheduled = true;
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(loadMetaPixel, { timeout: 4000 });
+            } else {
+                window.setTimeout(loadMetaPixel, 2500);
+            }
+        };
+        window.addEventListener('load', () => { pageLoaded = true; scheduleMetaPixel(); }, { once: true });
+        scheduleMetaPixel();
+    </script>
+<script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("/sw.js").catch((err) => {
+                    console.warn("Service worker registration failed:", err);
+                });
             });
         }
     </script>

@@ -10,28 +10,16 @@
   <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#8B0000">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=21">
-<!-- Meta Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '920711640501746');
-fbq('track', 'PageView');
-</script>
+  <link rel="stylesheet" href="style.css?v=25">
 <noscript><img height="1" width="1" style="display:none"
 src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
 /></noscript>
-<!-- End Meta Pixel Code -->
 </head>
 <body>
 
@@ -88,12 +76,44 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
     </div>
     <div class="cart-items" id="cartItemsContainer"></div>
     <div class="side-footer">
+      <div class="field">
+        <label for="custName" data-i18n="checkoutName">Full Name *</label>
+        <input type="text" id="custName" class="input" data-i18n-placeholder="checkoutName" placeholder="Full Name">
+      </div>
+      <div class="field">
+        <label for="custPhone" data-i18n="checkoutPhone">Mobile Number *</label>
+        <input type="tel" id="custPhone" class="input" data-i18n-placeholder="checkoutPhone" placeholder="01XXXXXXXXX">
+      </div>
+      <div class="field">
+        <label for="deliveryAddress" data-i18n="deliveryAddressLabel">Delivery Address *</label>
+        <textarea id="deliveryAddress" class="input" rows="2" placeholder="House#, Road#, Area, City..."></textarea>
+      </div>
+      <div class="field">
+        <label for="deliveryZone" data-i18n="selectDeliveryZone">Select Delivery Zone *</label>
+        <select id="deliveryZone" class="input">
+          <option value="" disabled selected data-i18n="selectDeliveryZone">Select Delivery Zone</option>
+          <option value="inside" data-i18n="zoneInside">Inside Sylhet (৳70)</option>
+          <option value="outside" data-i18n="zoneOutside">Outside Sylhet (৳140)</option>
+        </select>
+      </div>
+      <p id="dynamicPolicyDisplay" style="display:none; font-size:.76rem; color:var(--ink-muted); margin:-6px 0 12px; line-height:1.6;"></p>
+
+      <label class="checkbox-row" style="margin-bottom:16px;">
+        <input type="checkbox" id="policyAgree">
+        <span><span data-i18n="policyAgreeText">I agree to the</span> <a href="/policy/" data-i18n="policyLink">Delivery &amp; Return Policy</a>.</span>
+      </label>
+
       <div class="cart-total-row">
         <span data-i18n="cartTotal">Total</span>
         <span class="amount">৳<span id="cartTotalValue">0</span></span>
       </div>
       <button type="button" id="adminOrderBtn" class="btn btn-dark btn-block" onclick="window.checkoutToAdmin()" style="margin-bottom:8px;">
         <span class="spinner"></span><span class="btn-label" data-i18n="btnConfirmOrder">Confirm Order</span>
+      </button>
+      <div class="checkout-or" data-i18n="orWhatsapp">or</div>
+      <button type="button" class="btn btn-whatsapp btn-block" onclick="window.checkoutToWhatsApp()">
+        <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+        <span data-i18n="btnWhatsApp">Order via WhatsApp</span>
       </button>
     </div>
   </div>
@@ -164,22 +184,70 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
   </footer>
 
   <!-- Firebase CDN SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
-    const firebaseConfig = { apiKey: "AIzaSyALxypXDkF9QexbD_wE7-ADALIdj5vd-rY", authDomain: "mohor-app.firebaseapp.com", projectId: "mohor-app" };
-    if (typeof firebase !== 'undefined' && !firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    window.db = firebase.firestore();
+    document.addEventListener('DOMContentLoaded', () => {
+      const firebaseConfig = {
+        apiKey: "AIzaSyALxypXDkF9QexbD_wE7-ADALIdj5vd-rY",
+        authDomain: "mohor-app.firebaseapp.com",
+        projectId: "mohor-app",
+        storageBucket: "mohor-app.firebasestorage.app",
+        messagingSenderId: "989000457004",
+        appId: "1:989000457004:web:5679b256e20d94e27daa89"
+      };
+      if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      if (typeof firebase !== 'undefined') {
+        window.db = firebase.firestore();
+      }
+    });
   </script>
 
   <!-- Required JS Files -->
-  <script src="app.js?v=21"></script>
-  <script src="cart.js?v=21"></script>
-  <script type="module" src="auth.js?v=21"></script>
+  <script defer src="products.js?v=25"></script>
+  <script defer src="app.js?v=25"></script>
+  <script defer src="cart.js?v=25"></script>
 
   <script>
+    // Auth state needs to be known before someone can check out from the
+    // cart drawer on this page, so it's loaded off the critical path (idle
+    // time) rather than blocking first render, but not gated behind a click
+    // that a signed-in visitor might never make.
+    (() => {
+      let authPromise;
+      const loadScript = (src, type) => new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        if (type) script.type = type;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+      window.loadMohorAuth = () => {
+        if (!authPromise) {
+          authPromise = loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js')
+            .then(() => loadScript('auth.js?v=25', 'module'));
+        }
+        return authPromise;
+      };
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(window.loadMohorAuth, { timeout: 3000 });
+      } else {
+        window.setTimeout(window.loadMohorAuth, 1200);
+      }
+      document.addEventListener('click', (event) => {
+        if (event.target.closest('#openAccountBtn, .open-account-btn')) {
+          window.loadMohorAuth().then(() => {
+            if (typeof window.openAccountSidebar === 'function') window.openAccountSidebar();
+          }).catch((error) => console.error('Unable to load account tools:', error));
+        }
+      }, { capture: true });
+    })();
+  </script>
+
+  <script type="module">
     if (window.location.pathname.endsWith('.html')) {
       const cleanPath = window.location.pathname.replace(/\.html$/, '') + window.location.search;
       window.history.replaceState(null, '', cleanPath);
@@ -187,7 +255,11 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
 
     function esc(s){ return String(s||'').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
 
-    // Dynamic order history renderer with itemized discount badges & savings display
+    // Dynamic order history renderer with itemized discount badges & savings
+    // display. Declared as a module script (loaded after auth.js, which is
+    // also a deferred module) so this page-specific, richer renderer wins
+    // over auth.js's compact sidebar version of window.loadUserOrders,
+    // rather than being silently overwritten by it.
     window.loadUserOrders = async function(uid) {
       const container = document.getElementById('userOrderHistoryContainer');
       if (!container) return;
@@ -195,7 +267,7 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
       try {
         const snap = await db.collection('orders').where('userId', '==', uid).orderBy('orderDate', 'desc').get();
         if (snap.empty) {
-          container.innerHTML = '<p class="order-history-empty" style="text-align:center; color:#aaa; padding:40px 0;">No order history found. Start shopping to place your first order!</p>';
+          container.innerHTML = '<p class="order-history-empty" style="text-align:center; padding:40px 0;">No order history found. Start shopping to place your first order!</p>';
           return;
         }
 
@@ -218,18 +290,18 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
           }
 
           html += `
-            <div class="order-card-detail" style="background:#141414; border:1px solid #282828; border-radius:8px; padding:20px; margin-bottom:20px;">
-              <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222; padding-bottom:12px; margin-bottom:12px;">
+            <div class="order-card-detail">
+              <div class="ocd-header">
                 <div>
-                  <span style="font-size:11px; color:#888; text-transform:uppercase;">Order #${esc(doc.id.slice(0, 8))}</span>
-                  <div style="font-size:12px; color:#aaa; margin-top:2px;">${esc(date)}</div>
+                  <span class="ocd-eyebrow">Order #${esc(doc.id.slice(0, 8))}</span>
+                  <div class="ocd-date">${esc(date)}</div>
                 </div>
                 <div>
                   <span class="status-pill ${statusClass}">${esc(status)}</span>
                 </div>
               </div>
-              
-              <div style="margin-bottom:14px;">
+
+              <div class="ocd-items">
                 ${items.map(it => {
                   const qty = Number(it.qty || it.quantity) || 1;
                   const price = Number(it.price || it.salePrice) || 0;
@@ -237,10 +309,10 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
                   const hasDiscount = regPrice > price;
 
                   return `
-                    <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px; color:#ccc;">
+                    <div class="ocd-item-row">
                       <span>${esc(it.name || it.title || 'Item')} (${esc(qty)}x)</span>
                       <span>
-                        ${hasDiscount ? `<span style="text-decoration:line-through; color:#777; margin-right:4px; font-size:11px;">৳${esc(regPrice * qty)}</span>` : ''}
+                        ${hasDiscount ? `<span class="ocd-item-strike">৳${esc(regPrice * qty)}</span>` : ''}
                         ৳${esc(price * qty)}
                       </span>
                     </div>
@@ -248,12 +320,12 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
                 }).join('')}
               </div>
 
-              ${totalSavings > 0 ? `<div style="font-size:12px; color:#52c480; margin-bottom:10px; font-weight:600;">🎉 You saved ৳${esc(totalSavings)} on this order!</div>` : ''}
+              ${totalSavings > 0 ? `<div class="ocd-savings">🎉 You saved ৳${esc(totalSavings)} on this order!</div>` : ''}
 
-              <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #222; padding-top:12px; margin-top:10px;">
+              <div class="ocd-footer">
                 <div>
-                  <span style="font-size:12px; color:#888;">Total: </span>
-                  <strong style="color:#C9A14A; font-size:16px;">৳${esc(total)}</strong>
+                  <span class="ocd-total-label">Total: </span>
+                  <strong class="ocd-total">৳${esc(total)}</strong>
                 </div>
                 <a href="/order/?id=${doc.id}" class="btn btn-outline btn-sm" style="padding:6px 14px; font-size:12px; text-decoration:none; display:inline-block;">View Details &rarr;</a>
               </div>
@@ -263,23 +335,66 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
         container.innerHTML = html;
       } catch(e) {
         console.error('Error loading user orders:', e);
-        container.innerHTML = '<p style="color:#e06650; text-align:center;">Could not load order history. Please try again later.</p>';
+        container.innerHTML = '<p style="color:var(--rust); text-align:center;">Could not load order history. Please try again later.</p>';
       }
     };
 
     document.addEventListener('DOMContentLoaded', () => {
+      if (typeof window.loadStoreProducts === 'function') window.loadStoreProducts();
+
       const container = document.getElementById('userOrderHistoryContainer');
-      if (typeof firebase !== 'undefined' && firebase.auth) {
-        firebase.auth().onAuthStateChanged((user) => {
-          if (user) {
-            window.loadUserOrders(user.uid);
-          } else {
-            container.innerHTML = '<p class="order-history-empty">Please sign in to view your order history. Open Account (top-right) to log in.</p>';
-          }
-        });
-      }
-      setTimeout(() => { if (typeof updateUIText === 'function') updateUIText(); }, 50);
+      window.loadMohorAuth().then(() => {
+        if (typeof firebase !== 'undefined' && firebase.auth) {
+          firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+              window.loadUserOrders(user.uid);
+            } else if (container) {
+              container.innerHTML = '<p class="order-history-empty">Please sign in to view your order history. Open Account (top-right) to log in.</p>';
+            }
+          });
+        }
+      });
+      setTimeout(() => { if (typeof updateUIText === 'function') updateUIText(); }, 60);
     });
   </script>
+
+  <!-- Meta Pixel Code (loaded after first render, off the critical path) -->
+  <script>
+    const loadMetaPixel = () => {
+      if (window.fbq) return;
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '920711640501746');
+      fbq('track', 'PageView');
+    };
+    let pageLoaded = document.readyState === 'complete';
+    let metaPixelScheduled = false;
+    const scheduleMetaPixel = () => {
+      if (!pageLoaded || metaPixelScheduled) return;
+      metaPixelScheduled = true;
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(loadMetaPixel, { timeout: 4000 });
+      } else {
+        window.setTimeout(loadMetaPixel, 2500);
+      }
+    };
+    window.addEventListener('load', () => { pageLoaded = true; scheduleMetaPixel(); }, { once: true });
+    scheduleMetaPixel();
+  </script>
+<script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("/sw.js").catch((err) => {
+                    console.warn("Service worker registration failed:", err);
+                });
+            });
+        }
+    </script>
 </body>
 </html>

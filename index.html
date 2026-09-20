@@ -44,12 +44,14 @@
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#8B0000">
 
     <!-- Optimized Google Fonts Import -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700&family=IBM+Plex+Mono:wght@400&family=Noto+Sans+Bengali:wght@400;700&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=24">
+    <link rel="stylesheet" href="style.css?v=25">
 </head>
 <body>
 
@@ -401,13 +403,15 @@
         });
     </script>
 
-    <script defer src="products.js?v=20"></script>
-    <script defer src="app.js?v=23"></script>
-    <script defer src="cart.js?v=20"></script>
+    <script defer src="products.js?v=25"></script>
+    <script defer src="app.js?v=25"></script>
+    <script defer src="cart.js?v=25"></script>
 
     <script>
-        // Authentication is not needed to browse the catalog. Load it only
-        // when the account drawer is actually opened.
+        // Signed-in state also matters the moment someone checks out from the
+        // cart drawer (not just when they open the account panel), so this
+        // loads automatically off the critical path shortly after the page
+        // settles, with the click still there as an immediate fallback.
         (() => {
             let authPromise;
             const loadScript = (src, type) => new Promise((resolve, reject) => {
@@ -418,16 +422,21 @@
                 script.onerror = reject;
                 document.head.appendChild(script);
             });
-            const loadAuth = () => {
+            window.loadMohorAuth = () => {
                 if (!authPromise) {
                     authPromise = loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js')
-                        .then(() => loadScript('auth.js?v=20', 'module'));
+                        .then(() => loadScript('auth.js?v=25', 'module'));
                 }
                 return authPromise;
             };
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(window.loadMohorAuth, { timeout: 3000 });
+            } else {
+                window.setTimeout(window.loadMohorAuth, 1200);
+            }
             document.addEventListener('click', (event) => {
                 if (event.target.closest('#openAccountBtn, .open-account-btn')) {
-                    loadAuth().then(() => {
+                    window.loadMohorAuth().then(() => {
                         if (typeof window.openAccountSidebar === 'function') window.openAccountSidebar();
                     }).catch((error) => console.error('Unable to load account tools:', error));
                 }
@@ -484,7 +493,6 @@
         s.parentNode.insertBefore(t,s)}(window, document,'script',
         'https://connect.facebook.net/en_US/fbevents.js');
         fbq('init', '920711640501746');
-        fbq('track', 'PageView');
     };
     let productsRendered = false;
     let pageLoaded = document.readyState === 'complete';
@@ -512,5 +520,14 @@
     src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
     /></noscript>
     <!-- End Meta Pixel Code -->
+<script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("/sw.js").catch((err) => {
+                    console.warn("Service worker registration failed:", err);
+                });
+            });
+        }
+    </script>
 </body>
 </html>

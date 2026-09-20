@@ -1,19 +1,14 @@
 User-agent: *
 Allow: /
-Allow: /assets/
-Allow: /assets/products/
-
-User-agent: Googlebot-Image
-Allow: /
-Allow: /assets/
-Allow: /assets/products/
-
-Sitemap: https://mohor.me/sitemap.xml
-
-# Private or transactional pages should not appear in search results.
 Disallow: /admin.html
 Disallow: /login/
 Disallow: /cart/
 Disallow: /order/
 Disallow: /order-history/
 Disallow: /order-success/
+Disallow: /wishlist/
+
+User-agent: Googlebot-Image
+Allow: /assets/
+
+Sitemap: https://mohor.me/sitemap.xml
