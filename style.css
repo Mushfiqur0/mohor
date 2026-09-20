@@ -30,6 +30,11 @@
   --sage: #3C7A56;
   --sage-dark: #2C5C40;
   --sage-soft: #E7F2EC;
+  --amber-soft: rgba(201, 161, 74, 0.16);
+  --blue: #3E6B8A;
+  --blue-soft: #E8F1F6;
+  --plum: #6E4C7E;
+  --plum-soft: #F1E9F4;
   --whatsapp: #25D366;
   --whatsapp-dark: #128C7E;
   --header-bg: rgba(251, 248, 243, 0.94);
@@ -951,9 +956,83 @@ select.input {
   color: var(--ink);
 }
 .order-history-item .oh-total { font-family: var(--font-mono); font-weight: 700; color: var(--brass-deep) !important; }
-.order-history-item .oh-status { color: var(--brass-deep); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.order-history-item .oh-status { font-size: 0.68rem; }
 .order-history-item .oh-date { color: var(--ink-muted); font-size: 0.74rem; margin-top: 4px; }
 .order-history-empty, .order-history-loading { color: var(--ink-muted); font-size: 0.84rem; padding: 8px 0; }
+
+/* Order history row sub-elements — kept theme-aware via tokens rather than
+   fixed hex, so a card looks right in both light and dark mode. */
+.order-history-item .oh-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.order-history-item .oh-id { font-weight: 700; font-size: 0.95rem; }
+.order-history-item .oh-id a { color: var(--brass-deep); text-decoration: underline; text-underline-offset: 2px; }
+.order-history-item .oh-customer, .order-history-item .oh-address { font-size: 0.85rem; color: var(--ink-muted); margin-top: 4px; }
+.order-history-item .oh-right { text-align: right; }
+.order-history-item .oh-savings { font-size: 0.82rem; color: var(--sage-dark); margin-top: 10px; font-weight: 600; }
+:root[data-theme='dark'] .order-history-item .oh-savings { color: #72d99d; }
+.order-history-item .oh-actions { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+.order-history-item .oh-items { display: none; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
+.order-history-item .oh-item-row {
+  padding: 8px 10px; border: 1px solid var(--border); margin-bottom: 6px; border-radius: var(--radius-sm);
+  font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; background: var(--muslin);
+}
+.order-history-item .oh-item-meta { color: var(--ink-muted); }
+.order-history-item .oh-item-strike { text-decoration: line-through; color: var(--ink-faint); margin-right: 4px; font-size: 0.78rem; }
+
+/* Order status pill — shared across the account sidebar order history,
+   the order-history page, and the single-order detail page, so a status
+   always reads the same color everywhere (and matches the admin dashboard's
+   amber / blue / plum / sage / rust badge scheme). */
+.status-pill {
+  display: inline-block; padding: 4px 12px; border-radius: var(--radius-full);
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+}
+.status-pill.status-pending, .status-pill.status-new { background: var(--amber-soft); color: var(--brass-deep); border: 1px solid var(--brass); }
+.status-pill.status-confirmed { background: var(--blue-soft); color: var(--blue); border: 1px solid var(--blue); }
+.status-pill.status-shipped { background: var(--plum-soft); color: var(--plum); border: 1px solid var(--plum); }
+.status-pill.status-completed { background: var(--sage-soft); color: var(--sage-dark); border: 1px solid var(--sage); }
+.status-pill.status-cancelled { background: var(--rust-soft); color: var(--rust-dark); border: 1px solid var(--rust); }
+:root[data-theme='dark'] .status-pill.status-pending, :root[data-theme='dark'] .status-pill.status-new { background: rgba(201,161,74,.2); color: #C9A14A; border-color: #C9A14A; }
+:root[data-theme='dark'] .status-pill.status-confirmed { background: rgba(62,107,138,.2); color: #6ba4d9; border-color: #6ba4d9; }
+:root[data-theme='dark'] .status-pill.status-shipped { background: rgba(110,76,126,.2); color: #b886e3; border-color: #b886e3; }
+:root[data-theme='dark'] .status-pill.status-completed { background: rgba(60,122,86,.2); color: #52c480; border-color: #52c480; }
+:root[data-theme='dark'] .status-pill.status-cancelled { background: rgba(166,64,44,.2); color: #e06650; border-color: #e06650; }
+
+/* Order detail card — shared by the order-history list and the single-order
+   detail page. Both used to hard-code a permanent dark card (independent of
+   the site's own theme toggle); this version follows the same light/dark
+   tokens as everything else instead. */
+.order-card-detail {
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: 20px; margin-bottom: 20px; color: var(--ink);
+}
+.order-card-detail .ocd-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+.order-card-detail .ocd-eyebrow { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.5px; }
+.order-card-detail .ocd-id { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--brass-deep); }
+.order-card-detail .ocd-date { font-size: 12px; color: var(--ink-muted); margin-top: 2px; }
+.order-card-detail .ocd-items { margin-bottom: 14px; }
+.order-card-detail .ocd-item-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; color: var(--ink-muted); }
+.order-card-detail .ocd-item-strike { text-decoration: line-through; color: var(--ink-faint); margin-right: 4px; font-size: 11px; }
+.order-card-detail .ocd-savings { font-size: 0.85rem; color: var(--sage-dark); margin-bottom: 10px; font-weight: 600; }
+:root[data-theme='dark'] .order-card-detail .ocd-savings { color: #72d99d; }
+.order-card-detail .ocd-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 12px; margin-top: 10px; }
+.order-card-detail .ocd-total-label { font-size: 12px; color: var(--ink-muted); }
+.order-card-detail .ocd-total { color: var(--brass-deep); font-size: 16px; font-family: var(--font-mono); }
+
+/* Sub-panels used on the single-order detail page (Delivery Details /
+   Order Items / financial summary) */
+.ocd-section { background: var(--muslin); padding: 16px; border-radius: var(--radius-sm); margin-bottom: 20px; border: 1px solid var(--border); }
+.ocd-section-title { color: var(--brass-deep); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-family: var(--font-mono); }
+.detail-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--ink); gap: 12px; }
+.detail-row:last-child { border-bottom: none; }
+.ocd-item-card {
+  display: flex; justify-content: space-between; align-items: center; padding: 12px; border-radius: var(--radius-sm);
+  margin-bottom: 8px; border: 1px solid var(--border); background: var(--surface);
+}
+.ocd-item-card-title { font-size: 14px; display: block; color: var(--ink); }
+.ocd-item-card-meta { color: var(--ink-muted); font-size: 12px; }
+.ocd-item-card-price { font-size: 12px; color: var(--ink-muted); text-align: right; display: block; }
+.ocd-item-card-total { display: block; color: var(--brass-deep); margin-top: 2px; font-weight: 700; }
+.ocd-grand-row { font-size: 18px; font-weight: 700; color: var(--brass-deep); margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--border-strong); }
 
 /* ==========================================================================
    Toasts

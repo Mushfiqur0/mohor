@@ -442,7 +442,33 @@ function initPromoBannerAndCountdown() {
 
     if (typeof window.db === 'undefined' || !window.db) return;
 
-    window.db.collection("settings").doc("storefront").get().then(doc => {
+    // Same short-lived cache idea as the product catalog: the banner rarely
+    // changes minute-to-minute, so re-fetching it on every single page
+    // navigation is a Firestore round trip this site doesn't need to make.
+    const PROMO_CACHE_KEY = 'mohor_promo_cache_v1';
+    const PROMO_CACHE_TTL_MS = 3 * 60 * 1000;
+    let cachedPromo = null;
+    try {
+        const raw = sessionStorage.getItem(PROMO_CACHE_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed.savedAt && (Date.now() - parsed.savedAt < PROMO_CACHE_TTL_MS)) {
+                cachedPromo = parsed.data;
+            }
+        }
+    } catch (err) { /* ignore — falls through to a live fetch */ }
+
+    const settingsPromise = cachedPromo
+        ? Promise.resolve({ exists: true, data: () => cachedPromo })
+        : window.db.collection("settings").doc("storefront").get().then(doc => {
+            if (doc.exists) {
+                try { sessionStorage.setItem(PROMO_CACHE_KEY, JSON.stringify({ data: doc.data(), savedAt: Date.now() })); }
+                catch (err) { /* non-fatal */ }
+            }
+            return doc;
+        });
+
+    settingsPromise.then(doc => {
         if (!doc.exists) return;
         const data = doc.data();
 
@@ -548,8 +574,58 @@ function normalizeProductSnapshot(doc) {
     };
 }
 
+// Cross-page catalog cache: the storefront is a multi-page site, so without
+// this every single navigation (home -> product -> cart) re-downloads the
+// entire product collection from Firestore. sessionStorage survives across
+// page loads (but not tabs/sessions), so we use it as a short-lived,
+// stale-while-revalidate cache: a fresh visit within the same browsing
+// session renders instantly from cache while a real fetch quietly confirms
+// (and corrects, if anything changed) in the background.
+const PRODUCTS_CACHE_KEY = 'mohor_products_cache_v1';
+const PRODUCTS_CACHE_TTL_MS = 3 * 60 * 1000;
+
+function readProductsCache() {
+    try {
+        const raw = sessionStorage.getItem(PRODUCTS_CACHE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || !Array.isArray(parsed.products) || !parsed.savedAt) return null;
+        return parsed;
+    } catch (err) {
+        return null;
+    }
+}
+
+function writeProductsCache(products) {
+    try {
+        sessionStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify({ products, savedAt: Date.now() }));
+    } catch (err) {
+        // sessionStorage can be unavailable (private browsing, quota, etc.) —
+        // caching is a pure optimization, so failing silently here is safe.
+    }
+}
+
 window.loadStoreProducts = function() {
     if (_productsLoadPromise) return _productsLoadPromise;
+
+    const cached = readProductsCache();
+    const cacheIsFresh = !!cached && (Date.now() - cached.savedAt < PRODUCTS_CACHE_TTL_MS);
+
+    if (cached && cached.products.length > 0) {
+        // Serve the cached catalog immediately so the grid never has to sit on
+        // a skeleton while a page that already fetched this data recently
+        // waits on the network again.
+        window.firestoreProducts = cached.products;
+        window._catalogPending = false;
+    }
+
+    if (cacheIsFresh) {
+        if (typeof window.updateProducts === "function") window.updateProducts();
+        window.dispatchEvent(new CustomEvent('productsLoaded'));
+        _productsLoadPromise = Promise.resolve();
+        return _productsLoadPromise;
+    }
+
     _productsLoadPromise = (async () => {
         try {
             if (typeof window.db === 'undefined' || !window.db) {
@@ -560,7 +636,10 @@ window.loadStoreProducts = function() {
             querySnapshot.forEach((doc) => {
                 dynamicProducts.push(normalizeProductSnapshot(doc));
             });
-            if (dynamicProducts.length > 0) window.firestoreProducts = dynamicProducts;
+            if (dynamicProducts.length > 0) {
+                window.firestoreProducts = dynamicProducts;
+                writeProductsCache(dynamicProducts);
+            }
         } catch (err) {
             console.error("Error loading products from database:", err);
         } finally {
@@ -1298,18 +1377,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (!valid) return;
 
+            // AddToCart is tracked once, globally, by the wrapped window.addToCart
+            // installed below (see "Intercept cart.js addToCart calls globally") —
+            // tracking it again here would double-count the event in Meta Ads Manager.
             if (typeof window.addToCart === "function") {
                 window.addToCart(currentViewingProduct, selectedSize || 'Standard', selectedColor);
-            }
-
-            if (typeof window.trackMetaEvent === "function" && currentViewingProduct) {
-                window.trackMetaEvent("AddToCart", {}, {
-                    content_name: getText(currentViewingProduct.title),
-                    content_ids: [String(currentViewingProduct.id)],
-                    content_type: 'product',
-                    value: currentViewingProduct.price,
-                    currency: 'BDT'
-                });
             }
 
             closeProductModal();
@@ -1335,18 +1407,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (!valid) return;
 
+            // Same note as Add to Cart above: AddToCart itself is tracked once,
+            // globally, by the wrapped window.addToCart. Only InitiateCheckout
+            // is specific to the Buy Now action, so only that fires here.
             if (typeof window.addToCart === "function") {
                 window.addToCart(currentViewingProduct, selectedSize || 'Standard', selectedColor);
             }
 
             if (typeof window.trackMetaEvent === "function" && currentViewingProduct) {
-                window.trackMetaEvent("AddToCart", {}, {
-                    content_name: getText(currentViewingProduct.title),
-                    content_ids: [String(currentViewingProduct.id)],
-                    content_type: 'product',
-                    value: currentViewingProduct.price,
-                    currency: 'BDT'
-                });
                 window.trackMetaEvent("InitiateCheckout", {}, {
                     content_name: getText(currentViewingProduct.title),
                     content_ids: [String(currentViewingProduct.id)],

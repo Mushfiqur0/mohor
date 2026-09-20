@@ -13,37 +13,27 @@
     <meta property="og:type" content="website">
 
     <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#8B0000">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=21">
-<!-- Meta Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '920711640501746');
-fbq('track', 'PageView');
-</script>
+    <link rel="stylesheet" href="style.css?v=25">
 <noscript><img height="1" width="1" style="display:none"
 src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
 /></noscript>
-<!-- End Meta Pixel Code -->
 </head>
 <body>
 
     <header class="site-header" id="siteHeader">
         <nav class="nav container">
             <a href="/" class="brand-logo" aria-label="Mohor Clothings — Home">
-                <img src="assets/logo-ink.png" alt="Mohor Clothings" width="150" height="45">
+                <img src="assets/logo-ink.png" alt="Mohor Clothings" class="logo-dark" width="150" height="45">
+                <img src="assets/logo-white.png" alt="Mohor Clothings" class="logo-light" width="150" height="45">
             </a>
             <div class="nav-links" id="navLinks">
                 <a href="/" data-i18n="navShop">Shop</a>
@@ -298,34 +288,109 @@ src="https://www.facebook.com/tr?id=920711640501746&ev=PageView&noscript=1"
     </footer>
 
     <!-- Firebase CDN SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <!-- Firebase CDN SDKs -->
+    <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyALxypXDkF9QexbD_wE7-ADALIdj5vd-rY",
-            authDomain: "mohor-app.firebaseapp.com",
-            projectId: "mohor-app",
-            storageBucket: "mohor-app.firebasestorage.app",
-            messagingSenderId: "989000457004",
-            appId: "1:989000457004:web:5679b256e20d94e27daa89"
-        };
-        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        window.db = firebase.firestore();
+        document.addEventListener('DOMContentLoaded', () => {
+            const firebaseConfig = {
+                apiKey: "AIzaSyALxypXDkF9QexbD_wE7-ADALIdj5vd-rY",
+                authDomain: "mohor-app.firebaseapp.com",
+                projectId: "mohor-app",
+                storageBucket: "mohor-app.firebasestorage.app",
+                messagingSenderId: "989000457004",
+                appId: "1:989000457004:web:5679b256e20d94e27daa89"
+            };
+            if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            if (typeof firebase !== 'undefined') {
+                window.db = firebase.firestore();
+            }
+        });
     </script>
 
-    <script src="products.js?v=18"></script>
-    <script src="app.js?v=18"></script>
-    <script src="cart.js?v=18"></script>
-    <script type="module" src="auth.js?v=18"></script>
+    <script defer src="products.js?v=25"></script>
+    <script defer src="app.js?v=25"></script>
+    <script defer src="cart.js?v=25"></script>
+
+    <script>
+        (() => {
+            let authPromise;
+            const loadScript = (src, type) => new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                if (type) script.type = type;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+            window.loadMohorAuth = () => {
+                if (!authPromise) {
+                    authPromise = loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js')
+                        .then(() => loadScript('auth.js?v=25', 'module'));
+                }
+                return authPromise;
+            };
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(window.loadMohorAuth, { timeout: 3000 });
+            } else {
+                window.setTimeout(window.loadMohorAuth, 1200);
+            }
+            document.addEventListener('click', (event) => {
+                if (event.target.closest('#openAccountBtn, .open-account-btn')) {
+                    window.loadMohorAuth().then(() => {
+                        if (typeof window.openAccountSidebar === 'function') window.openAccountSidebar();
+                    }).catch((error) => console.error('Unable to load account tools:', error));
+                }
+            }, { capture: true });
+        })();
+    </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             window.loadStoreProducts();
             setTimeout(() => { if (typeof updateUIText === 'function') updateUIText(); }, 60);
         });
+    </script>
+
+    <!-- Meta Pixel Code (loaded after first render, off the critical path) -->
+    <script>
+        const loadMetaPixel = () => {
+            if (window.fbq) return;
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '920711640501746');
+            fbq('track', 'PageView');
+        };
+        let pageLoaded = document.readyState === 'complete';
+        let metaPixelScheduled = false;
+        const scheduleMetaPixel = () => {
+            if (!pageLoaded || metaPixelScheduled) return;
+            metaPixelScheduled = true;
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(loadMetaPixel, { timeout: 4000 });
+            } else {
+                window.setTimeout(loadMetaPixel, 2500);
+            }
+        };
+        window.addEventListener('load', () => { pageLoaded = true; scheduleMetaPixel(); }, { once: true });
+        scheduleMetaPixel();
+    </script>
+<script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("/sw.js").catch((err) => {
+                    console.warn("Service worker registration failed:", err);
+                });
+            });
+        }
     </script>
 </body>
 </html>

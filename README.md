@@ -11,26 +11,44 @@ step — every file is served as-is.
 ## Structure
 
 ```
-index.html      Homepage — hero, shop grid, filters, quick-view modal
-about.html      Brand story
-policy.html     Delivery & return policy
-cart.html       Standalone checkout page (used on mobile / direct link)
-product.html    Standalone product detail page (used on mobile)
-login.html      Standalone login / signup page
-admin.html      Admin dashboard (orders, products, inventory) — not linked
-                from the storefront nav; bookmark it directly
+index.html          Homepage — hero, shop grid, filters/menu drawer
+about.html          Brand story
+policy.html         Delivery & return policy
+product.html        Product detail page (gallery, sizes/colors, wishlist)
+cart.html           Standalone checkout page
+login.html          Standalone login / signup page
+order.html          Single order detail / receipt view
+order-history.html  A signed-in customer's past orders
+order-success.html  Post-checkout confirmation (lightweight, no Firebase)
+wishlist.html       Saved items (device-local, via localStorage)
+admin.html          Admin dashboard (orders, products, inventory, stock,
+                    storewide discounts, CSV export) — not linked from the
+                    storefront nav; bookmark it directly
 
-style.css       Shared design system for the storefront (all six pages above)
-app.js          i18n (EN/BN), product catalog loading + rendering, quick-view
-                modal, nav interactions, toast notifications
-cart.js         Cart state, cart UI, WhatsApp + website checkout
+Every page above also exists as <name>/index.html (e.g. about/index.html),
+identical to the top-level file plus a single <base href="../"> tag. This
+gives the site clean URLs (/about/ instead of /about.html) on GitHub Pages,
+which has no server-side rewrite support. When editing a page, edit the
+top-level *.html file and regenerate its folder twin from it — don't hand-edit
+the twin, since the two must stay byte-identical apart from that one tag.
+
+style.css       Shared design system for every storefront page above
+app.js          i18n (EN/BN), product catalog loading + rendering, cart/
+                account sidebars, wishlist read/write, per-size stock
+                helpers, promo banner, nav interactions, Meta Pixel/CAPI
+                tracking helper (trackMetaEvent)
+cart.js         Cart state, stock-aware add-to-cart, pricing verification,
+                WhatsApp + website checkout, order creation
 auth.js         Firebase Auth, saved profile, order history
 products.js     Static fallback product catalog (used only if Firestore is
-                empty/unreachable — the live catalog is managed from the
-                Admin dashboard)
+                empty/unreachable) + the "related products" renderer
+wishlist.js     Wishlist page orchestrator (reuses app.js's renderProducts)
+sw.js           Service worker: cache-first for static assets, network-first
+                for HTML, to reduce reliance on GitHub Pages' default caching
+manifest.webmanifest  Basic PWA manifest (icons, theme color, install)
 
 assets/         Logo marks, favicons, hero images, OG image, placeholder art
-assets/banner-*.webp Responsive hero photography
+assets/banner-*.webp Responsive hero photography (800/1280/1920/2560w)
 assets/favicon-*.png Favicons and app icons
 CNAME           GitHub Pages custom domain (mohor.me)
 _nojekyll       Disables Jekyll processing on GitHub Pages
@@ -48,13 +66,22 @@ then open `http://localhost:8080`.
 
 ## Firebase
 
-The site uses the Firebase **compat** SDK (loaded from the `gstatic.com` CDN
-in each page's `<head>`/body) for:
+The storefront uses the Firebase **compat** SDK (loaded from the
+`gstatic.com` CDN) for:
 
 - **Firestore** — `products` collection (live catalog, managed from
-  `admin.html`) and `orders` collection (placed from the storefront).
+  `admin.html`), `orders` collection (placed from the storefront), and a
+  `settings/storefront` document driving the storewide sale banner.
 - **Auth** — email/password accounts, used to save a customer's name, phone
   and address for faster repeat checkout, and to show their order history.
+
+Auth is loaded automatically shortly after each page settles (via
+`requestIdleCallback`, off the critical rendering path) rather than eagerly,
+except on `login.html` where it's the page's whole purpose, and `product.html`
+and `order-success.html`, which never need it at all.
+
+`admin.html` is a separate app and uses the **modular** Firebase SDK with its
+own auth/session handling — it does not share code with the storefront pages.
 
 The Firebase config object (API key, project ID, etc.) is intentionally
 public in the client code — this is normal for Firebase web apps. Actual
@@ -62,30 +89,48 @@ access control is enforced through **Firestore Security Rules**, configured
 in the Firebase console, not in this repository.
 
 Order totals are recomputed from the live catalog before being saved (see
-`getCanonicalPrice` in `cart.js`), so a tampered client-side price can't be
-submitted directly. This is a client-side mitigation only — for a hard
+`getCanonicalItemDetails` in `cart.js`), so a tampered client-side price can't
+be submitted directly. This is a client-side mitigation only — for a hard
 guarantee, validate totals again in Firestore Security Rules or a Cloud
-Function.
+Function. The same is true of per-size stock checks: they prevent obviously
+over-limit adds in the UI, but nothing server-side stops two customers from
+racing for the last unit — a Cloud Function or transaction would be needed
+to close that gap completely.
 
 ## Admin dashboard
 
-`admin.html` is a self-contained dashboard (orders, products, inventory,
-CSV export) for managing the store day-to-day. It isn't linked from the
-public nav — bookmark `/admin.html` directly, and sign in with a Firebase
-Auth account that your Firestore rules grant admin access to.
+`admin.html` is a self-contained dashboard (overview, orders, order history
+with a calendar/chart view, products, per-colour/per-size stock, storewide
+discounts, CSV export) for managing the store day-to-day. It isn't linked
+from the public nav — bookmark `/admin.html` directly, and sign in with a
+Firebase Auth account that your Firestore rules grant admin access to.
+
+## Security note
+
+`app.js` sends the store's Telegram bot token directly from the browser to
+notify the owner of new orders. Anyone can read this token from the page
+source and use it to send messages as that bot. The Meta Conversions API
+integration already solves the equivalent problem correctly — a small
+Cloudflare Worker (or similar) holds the secret and the client calls the
+worker instead of the third-party API directly. The Telegram notification
+should be moved behind the same kind of proxy, and the current token should
+be rotated via BotFather once that's in place.
 
 ## Deployment
 
 Push to the branch configured for GitHub Pages. The `CNAME` file points the
 custom domain (`mohor.me`) at this repository; `_nojekyll` tells GitHub
 Pages to serve the files exactly as they are, without running them through
-Jekyll first.
+Jekyll first. Remember to bump the `?v=` query string on `style.css`/
+`app.js`/`cart.js`/`auth.js`/`products.js` (and in `sw.js`'s `CACHE_VERSION`)
+whenever their content changes, so returning visitors — and the service
+worker's cache — pick up the new version instead of a stale cached copy.
 
 ## Language
 
 The storefront supports English and Bengali via a client-side toggle
-(top-right of the nav), persisted in `localStorage`. All UI strings live in
-`window.uiTranslations` in `app.js`; product content (title, description,
-etc.) can be a `{ en, bn }` object in Firestore/`products.js` or a plain
-string.
+(top-right of the nav), persisted in `localStorage` under `mohor_lang`. All
+UI strings live in `window.uiTranslations` in `app.js`; product content
+(title, description, etc.) can be a `{ en, bn }` object in
+Firestore/`products.js` or a plain string.
 <!-- pages: rebuild trigger -->

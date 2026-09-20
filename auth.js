@@ -219,28 +219,28 @@ async function loadUserOrders(uid) {
         container.innerHTML = rows.map(r => {
             const statusClass = 'status-' + r.status.toLowerCase().replace(/\s+/g, '');
             return `
-            <div class="order-history-item" style="background:#141414; border:1px solid #282828; border-radius:8px; padding:18px; margin-bottom:16px;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+            <div class="order-history-item">
+                <div class="oh-header">
                     <div>
-                        <div style="font-weight:700; font-size:0.95rem;">Order ID: <a href="/order/?id=${esc(r.id)}" style="color:#C9A14A; text-decoration:underline;">${esc(r.id)}</a></div>
-                        <div style="color:var(--ink-muted, #888); font-size:0.85rem; margin-top:4px;">${esc(r.date)} • ${esc(r.time)}</div>
-                        ${r.customerName ? `<div style="font-size:0.85rem; color:#aaa; margin-top:4px;"><strong>Customer:</strong> ${esc(r.customerName)}</div>` : ''}
-                        ${r.deliveryAddress ? `<div style="font-size:0.85rem; color:#888; margin-top:2px;"><strong>Address:</strong> ${esc(r.deliveryAddress)}</div>` : ''}
+                        <div class="oh-id">Order ID: <a href="/order/?id=${esc(r.id)}">${esc(r.id)}</a></div>
+                        <div class="oh-date">${esc(r.date)} • ${esc(r.time)}</div>
+                        ${r.customerName ? `<div class="oh-customer"><strong>Customer:</strong> ${esc(r.customerName)}</div>` : ''}
+                        ${r.deliveryAddress ? `<div class="oh-address"><strong>Address:</strong> ${esc(r.deliveryAddress)}</div>` : ''}
                     </div>
-                    <div style="text-align:right">
-                        <div class="oh-total" style="font-weight:700; font-size:1.1rem; color:#C9A14A;">৳${r.total}</div>
-                        <div class="oh-status status-pill ${statusClass}" style="margin-top:6px; display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700; text-transform:uppercase;">${esc(r.status)}</div>
+                    <div class="oh-right">
+                        <div class="oh-total">৳${r.total}</div>
+                        <div class="oh-status status-pill ${statusClass}" style="margin-top:6px;">${esc(r.status)}</div>
                     </div>
                 </div>
 
-                ${r.totalSavings > 0 ? `<div style="font-size:0.82rem; color:#52c480; margin-top:10px; font-weight:600;">🎉 You saved ৳${esc(r.totalSavings)} on this order!</div>` : ''}
+                ${r.totalSavings > 0 ? `<div class="oh-savings">🎉 You saved ৳${esc(r.totalSavings)} on this order!</div>` : ''}
 
-                <div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
+                <div class="oh-actions">
                     <a class="btn btn-outline btn-sm" href="/order/?id=${esc(r.id)}" style="text-decoration:none; padding:6px 14px; font-size:12px;">View Details</a>
-                    <button type="button" class="btn btn-ghost btn-sm" style="padding:6px 14px; font-size:12px;" onclick="(function(btn){ const items=btn.closest('.order-history-item').querySelector('.order-items'); if(items) items.style.display = (items.style.display === 'none' || !items.style.display) ? 'block' : 'none'; })(this)">Toggle items</button>
+                    <button type="button" class="btn btn-ghost btn-sm" style="padding:6px 14px; font-size:12px;" onclick="(function(btn){ const items=btn.closest('.order-history-item').querySelector('.oh-items'); if(items) items.style.display = (items.style.display === 'none' || !items.style.display) ? 'block' : 'none'; })(this)">Toggle items</button>
                 </div>
 
-                <div class="order-items" style="display:none; margin-top:12px; border-top:1px solid #282828; padding-top:10px;">
+                <div class="oh-items">
                     ${r.items.map(it => {
                         const qty = Number(it.qty || it.quantity) || 1;
                         const price = Number(it.price || it.salePrice) || 0;
@@ -248,14 +248,14 @@ async function loadUserOrders(uid) {
                         const hasDiscount = regPrice > price;
 
                         return `
-                        <div style="padding:8px 10px; border:1px solid #282828; margin-bottom:6px; border-radius:6px; font-size:0.85rem; display:flex; justify-content:space-between; align-items:center; background:#181818;">
+                        <div class="oh-item-row">
                             <div>
-                                <strong>${esc(it.name || it.title || 'Item')}</strong> 
-                                ${it.size || it.variant ? `<span style="color:#888;">(${esc(it.size || it.variant)})</span>` : ''}
-                                ${it.color ? `<span style="color:#888;">&middot; ${esc(it.color)}</span>` : ''}
+                                <strong>${esc(it.name || it.title || 'Item')}</strong>
+                                ${it.size || it.variant ? `<span class="oh-item-meta">(${esc(it.size || it.variant)})</span>` : ''}
+                                ${it.color ? `<span class="oh-item-meta">&middot; ${esc(it.color)}</span>` : ''}
                             </div>
                             <div>
-                                ${hasDiscount ? `<span style="text-decoration:line-through; color:#777; margin-right:4px; font-size:0.78rem;">৳${esc(regPrice * qty)}</span>` : ''}
+                                ${hasDiscount ? `<span class="oh-item-strike">৳${esc(regPrice * qty)}</span>` : ''}
                                 qty: ${esc(qty)} — ৳${esc(price * qty)}
                             </div>
                         </div>`;

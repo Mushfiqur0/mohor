@@ -1365,15 +1365,22 @@ async function applyStorewideDiscount() {
 
       await batch.commit();
 
+      // Note: this writes to settings/storefront using the field names the
+      // storefront's initPromoBannerAndCountdown() actually reads
+      // (saleActive / bannerText / bannerBadge / saleEndTime). It previously
+      // wrote to a different document (settings/banner) with different field
+      // names, so the discount itself applied correctly but the "update the
+      // top banner automatically" part silently never worked.
       const bannerPayload = {
-        active: true,
+        saleActive: true,
+        bannerText: `FLAT ${percent}% OFF — Limited Time Offer! T&C Apply`,
+        bannerBadge: `-${percent}%`,
+        saleEndTime: expiryVal ? new Date(expiryVal).toISOString() : null,
         discountPercent: percent,
-        text: `FLAT ${percent}% OFF — Limited Time Offer! T&C Apply`,
-        expiresAt: expiryVal ? new Date(expiryVal).toISOString() : null,
         updatedAt: new Date().toISOString()
       };
 
-      await setDoc(doc(db, "settings", "banner"), bannerPayload);
+      await setDoc(doc(db, "settings", "storefront"), bannerPayload);
       showToast(`Applied ${percent}% discount across all store products!`, 'success');
     } catch (err) {
       console.error('Bulk discount error:', err);
@@ -1401,11 +1408,12 @@ async function resetAllDiscounts() {
 
       await batch.commit();
 
-      await setDoc(doc(db, "settings", "banner"), {
-        active: false,
+      await setDoc(doc(db, "settings", "storefront"), {
+        saleActive: false,
+        bannerText: '',
+        bannerBadge: '',
+        saleEndTime: null,
         discountPercent: 0,
-        text: '',
-        expiresAt: null,
         updatedAt: new Date().toISOString()
       });
 
@@ -2071,5 +2079,14 @@ resetSizeBlocks();
 renderVariantStockGrid();
 renderHistoryView();
 </script>
+<script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("/sw.js").catch((err) => {
+                    console.warn("Service worker registration failed:", err);
+                });
+            });
+        }
+    </script>
 </body>
 </html>
